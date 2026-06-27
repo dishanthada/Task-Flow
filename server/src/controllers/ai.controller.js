@@ -48,7 +48,10 @@ Respond ONLY with a valid JSON object in this exact format (no markdown, no expl
         ],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 256,
+          maxOutputTokens: 1024,
+          thinkingConfig: {
+            thinkingBudget: 0
+          }
         },
       },
       {

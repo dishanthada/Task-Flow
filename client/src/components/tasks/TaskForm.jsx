@@ -6,6 +6,7 @@ import Button from '../common/Button';
 import Spinner from '../common/Spinner';
 import { suggestEstimate } from '../../api/aiApi';
 import { toInputDate } from '../../utils/dateUtils';
+import { Sparkles, Bot, AlertCircle } from 'lucide-react';
 
 const TaskForm = ({
   isOpen,
@@ -23,6 +24,7 @@ const TaskForm = ({
     priority: 'medium',
     dueDate: '',
     estimatedEffort: '',
+    isAiEstimated: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -41,6 +43,7 @@ const TaskForm = ({
         priority: initialData.priority || 'medium',
         dueDate: toInputDate(initialData.dueDate),
         estimatedEffort: initialData.estimatedEffort || '',
+        isAiEstimated: initialData.isAiEstimated || false,
       });
     } else {
       setForm({
@@ -50,6 +53,7 @@ const TaskForm = ({
         priority: 'medium',
         dueDate: '',
         estimatedEffort: '',
+        isAiEstimated: false,
       });
     }
     setErrors({});
@@ -97,6 +101,7 @@ const TaskForm = ({
       ...p,
       estimatedEffort: `${aiSuggestion.effortEstimate} (${aiSuggestion.effortHours || ''})`.trim(),
       dueDate: toInputDate(aiSuggestion.suggestedDueDate),
+      isAiEstimated: true,
     }));
     setAiSuggestion(null);
     toast.success('AI suggestion applied!');
@@ -148,10 +153,10 @@ const TaskForm = ({
         <div />
       )}
       <div className="flex gap-2">
-        <Button variant="secondary" onClick={onClose} disabled={submitting}>
+        <Button variant="secondary" onClick={onClose} disabled={submitting} className="rounded-lg text-xs font-semibold py-2">
           Cancel
         </Button>
-        <Button onClick={handleSubmit} loading={submitting}>
+        <Button onClick={handleSubmit} loading={submitting} className="btn-primary rounded-lg text-xs font-semibold py-2">
           {initialData ? 'Save Changes' : 'Create Task'}
         </Button>
       </div>
@@ -172,6 +177,7 @@ const TaskForm = ({
           error={errors.title}
           required
           autoFocus
+          className="rounded-lg text-xs"
         />
 
         {/* Description */}
@@ -185,38 +191,38 @@ const TaskForm = ({
           onChange={handleChange}
           error={errors.description}
           rows={3}
+          className="rounded-lg text-xs"
         />
 
         {/* AI Helper Trigger Banner */}
-        <div className="p-4 rounded-xl border border-indigo-100 dark:border-indigo-900/30 bg-gradient-to-r from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 flex items-center justify-between gap-4">
+        <div className="p-4 rounded-xl border border-[#E8E8E8] dark:border-neutral-800 bg-[#F5F5F5] dark:bg-neutral-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="text-xl">✨</span>
             <div className="flex-1">
-              <h5 className="text-xs font-semibold text-indigo-900 dark:text-indigo-300">Smart Estimate Assist</h5>
-              <p className="text-3xs text-indigo-700 dark:text-indigo-400">Suggests optimal due dates & effort estimates based on task metadata.</p>
+              <h5 className="text-xs font-semibold text-black dark:text-white">AI Estimate Assistant</h5>
+              <p className="text-[10px] text-neutral-500 mt-0.5">Get AI-powered suggestions for due dates & effort estimates based on task metadata.</p>
             </div>
           </div>
           <Button
             type="button"
-            variant="ghost"
-            size="sm"
             onClick={handleAISuggest}
             disabled={aiLoading}
-            className="border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 font-semibold shadow-sm"
+            className="btn-primary text-[11px] font-semibold py-2 px-4 rounded-lg self-start sm:self-auto flex items-center gap-1.5"
           >
-            {aiLoading ? <Spinner size="sm" className="mr-1" /> : 'Suggest Estimate'}
+            {aiLoading ? <Spinner size="sm" /> : <Sparkles size={12} />}
+            <span>Suggest Estimate</span>
           </Button>
         </div>
 
         {/* AI Suggestion Display */}
         {aiSuggestion && (
-          <div className="p-4 rounded-xl border border-green-200 dark:border-green-900/30 bg-green-50/30 dark:bg-green-950/10 animate-fade-in flex flex-col gap-3">
+          <div className="p-4 rounded-xl border border-black dark:border-white bg-[#FFFFFF] dark:bg-[#121212] animate-fade-in flex flex-col gap-3.5 shadow-sm">
             <div className="flex items-start justify-between">
               <div>
-                <h5 className="text-xs font-semibold text-green-950 dark:text-green-300 flex items-center gap-1.5">
-                  🤖 Suggested Recommendation
+                <h5 className="text-xs font-semibold text-black dark:text-white flex items-center gap-1.5">
+                  <Bot size={14} /> AI Recommendation
                 </h5>
-                <p className="text-3xs text-green-700 dark:text-green-400 mt-0.5">Recommended parameters for this task.</p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">Accept or ignore recommended due date and effort estimate.</p>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -224,38 +230,36 @@ const TaskForm = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => setAiSuggestion(null)}
-                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  className="text-xs text-neutral-500 hover:text-black dark:hover:text-white"
                 >
                   Ignore
                 </Button>
                 <Button
                   type="button"
-                  variant="primary"
-                  size="sm"
                   onClick={handleAcceptSuggestion}
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium text-xs px-2.5 py-1 rounded"
+                  className="btn-primary text-xs px-3 py-1.5 rounded-lg"
                 >
-                  Apply Suggestion
+                  Apply Recommendation
                 </Button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-white dark:bg-slate-900/50 p-3 rounded-lg border border-green-100 dark:border-green-950/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-[#E8E8E8] dark:border-neutral-800 bg-[#FAFAFA] dark:bg-neutral-900/40">
               <div>
-                <span className="text-3xs text-gray-400 uppercase tracking-wider font-semibold block">Effort Estimate</span>
-                <span className="text-xs font-semibold text-green-800 dark:text-green-400 flex items-center gap-1.5 mt-0.5">
+                <span className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold block">Effort Estimate</span>
+                <span className="text-xs font-bold text-black dark:text-white flex items-center gap-1 mt-0.5">
                   ⏱️ {aiSuggestion.effortEstimate} ({aiSuggestion.effortHours || ''})
                 </span>
               </div>
               <div>
-                <span className="text-3xs text-gray-400 uppercase tracking-wider font-semibold block">Suggested Due Date</span>
-                <span className="text-xs font-semibold text-green-800 dark:text-green-400 flex items-center gap-1.5 mt-0.5">
+                <span className="text-[9px] text-neutral-400 uppercase tracking-wider font-semibold block">Suggested Due Date</span>
+                <span className="text-xs font-bold text-black dark:text-white flex items-center gap-1 mt-0.5">
                   📅 {new Date(aiSuggestion.suggestedDueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </span>
               </div>
             </div>
 
-            <div className="text-xs text-green-900/80 dark:text-green-300/80 bg-green-50/10 dark:bg-green-900/5 p-2.5 rounded border border-green-50/50 dark:border-green-950/10 italic leading-relaxed">
+            <div className="text-xs text-neutral-600 dark:text-neutral-350 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-[#E8E8E8] dark:border-neutral-800 italic leading-relaxed">
               &ldquo;{aiSuggestion.reasoning}&rdquo;
             </div>
           </div>
@@ -265,7 +269,7 @@ const TaskForm = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Status */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="task-status" className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            <label htmlFor="task-status" className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
               Status
             </label>
             <select
@@ -273,7 +277,7 @@ const TaskForm = ({
               name="status"
               value={form.status}
               onChange={handleChange}
-              className="form-input"
+              className="form-input text-xs rounded-lg py-2.5"
             >
               <option value="todo">To Do</option>
               <option value="in-progress">In Progress</option>
@@ -283,7 +287,7 @@ const TaskForm = ({
 
           {/* Priority */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="task-priority" className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+            <label htmlFor="task-priority" className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
               Priority
             </label>
             <select
@@ -291,7 +295,7 @@ const TaskForm = ({
               name="priority"
               value={form.priority}
               onChange={handleChange}
-              className="form-input"
+              className="form-input text-xs rounded-lg py-2.5"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -308,6 +312,7 @@ const TaskForm = ({
             value={form.dueDate}
             onChange={handleChange}
             error={errors.dueDate}
+            className="rounded-lg text-xs"
           />
         </div>
 
@@ -320,6 +325,7 @@ const TaskForm = ({
           value={form.estimatedEffort}
           onChange={handleChange}
           error={errors.estimatedEffort}
+          className="rounded-lg text-xs"
         />
       </form>
     </Modal>

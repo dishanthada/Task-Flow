@@ -1,30 +1,24 @@
-import { Plus, ClipboardList } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import TaskCard from './TaskCard';
 
 const COLUMN_CONFIG = {
   'todo': {
     label: 'To Do',
-    dotColor: '#64748b',
-    headerBg: 'rgba(100,116,139,0.08)',
-    borderColor: '#64748b',
+    dotClass: 'dot-todo bg-black dark:bg-white',
     emptyIcon: '📋',
-    emptyMsg: 'No tasks yet. Add one to get started!',
+    emptyMsg: 'No tasks to do. Add one to get started!',
   },
   'in-progress': {
     label: 'In Progress',
-    dotColor: '#f59e0b',
-    headerBg: 'rgba(245,158,11,0.08)',
-    borderColor: '#f59e0b',
+    dotClass: 'dot-progress bg-neutral-500',
     emptyIcon: '⚡',
-    emptyMsg: 'Nothing in progress. Pick a task to start!',
+    emptyMsg: 'No tasks in progress. Pick a task to start working!',
   },
   'done': {
     label: 'Done',
-    dotColor: '#10b981',
-    headerBg: 'rgba(16,185,129,0.08)',
-    borderColor: '#10b981',
+    dotClass: 'dot-done bg-black dark:bg-white',
     emptyIcon: '🏆',
-    emptyMsg: 'No completed tasks yet. Keep going!',
+    emptyMsg: 'No completed tasks yet. Great things take time!',
   },
 };
 
@@ -41,74 +35,51 @@ const TaskColumn = ({
 
   return (
     <div
-      className="flex flex-col rounded-2xl overflow-hidden"
-      style={{
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-color)',
-        borderTop: `3px solid ${config.borderColor}`,
-        boxShadow: 'var(--shadow-sm)',
-        minHeight: '480px',
-      }}
+      className="flex flex-col bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 rounded-xl overflow-hidden shadow-xs min-h-[480px]"
     >
       {/* Column Header */}
       <div
-        className="flex items-center justify-between px-4 py-3 flex-shrink-0"
-        style={{ backgroundColor: config.headerBg, borderBottom: '1px solid var(--border-color)' }}
+        className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 flex-shrink-0"
       >
-        <div className="flex items-center gap-2.5">
-          <span
-            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: config.dotColor, boxShadow: `0 0 6px ${config.dotColor}60` }}
-          />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+        <div className="flex items-center gap-2">
+          {/* Header indicator dot */}
+          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${config.dotClass}`} />
+          <span className="text-xs font-bold text-black dark:text-white">
             {config.label}
           </span>
-          <span
-            className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
-            style={{
-              backgroundColor: count > 0 ? config.dotColor : 'var(--bg-surface-3)',
-              color: count > 0 ? 'white' : 'var(--text-muted)',
-            }}
-          >
+          <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-[10px] font-bold text-neutral-500">
             {count}
           </span>
         </div>
 
-        {/* Add task button — all columns */}
+        {/* Add task button on header */}
         <button
           onClick={onCreateTaskClick}
-          className="p-1.5 rounded-lg transition-all duration-150"
-          style={{ color: 'var(--text-muted)', backgroundColor: 'transparent' }}
-          onMouseEnter={e => { e.currentTarget.style.backgroundColor = config.headerBg; e.currentTarget.style.color = config.dotColor; }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-muted)'; }}
+          className="p-1 rounded text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
           title={`Add task to ${config.label}`}
-          aria-label={`Add task to ${config.label}`}
         >
-          <Plus size={16} strokeWidth={2.5} />
+          <Plus size={14} strokeWidth={2.5} />
         </button>
       </div>
 
       {/* Task list */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5" style={{ maxHeight: 'calc(100vh - 320px)' }}>
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 max-h-[calc(100vh-280px)]">
         {count === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4 text-center select-none flex-1">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-3"
-              style={{ backgroundColor: config.headerBg }}
-            >
+          <div className="flex flex-col items-center justify-center py-16 px-4 text-center select-none flex-1">
+            <div className="w-12 h-12 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-[#E8E8E8] dark:border-neutral-800 flex items-center justify-center text-xl mb-4">
               {config.emptyIcon}
             </div>
-            <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs font-semibold text-black dark:text-white">
+              No tasks in {config.label.toLowerCase()}
+            </p>
+            <p className="text-[11px] text-neutral-400 mt-1 max-w-[150px] leading-normal">
               {config.emptyMsg}
             </p>
             <button
               onClick={onCreateTaskClick}
-              className="mt-3 flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-150"
-              style={{ color: config.dotColor, backgroundColor: config.headerBg }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              className="mt-4 flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-all shadow-xs"
             >
-              <Plus size={13} strokeWidth={2.5} /> Add Task
+              <Plus size={11} strokeWidth={2.5} /> Add Task
             </button>
           </div>
         ) : (
@@ -116,7 +87,7 @@ const TaskColumn = ({
             <div
               key={task._id}
               className="animate-card-in"
-              style={{ animationDelay: `${idx * 40}ms` }}
+              style={{ animationDelay: `${idx * 30}ms` }}
             >
               <TaskCard
                 task={task}
@@ -129,19 +100,12 @@ const TaskColumn = ({
         )}
       </div>
 
-      {/* Footer: Add task shortcut */}
+      {/* Footer shortcut add task button */}
       {count > 0 && (
-        <div className="flex-shrink-0 px-3 pb-3">
+        <div className="px-3 pb-3 flex-shrink-0">
           <button
             onClick={onCreateTaskClick}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-medium transition-all duration-150"
-            style={{
-              color: 'var(--text-muted)',
-              border: '1.5px dashed var(--border-color)',
-              backgroundColor: 'transparent',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = config.dotColor; e.currentTarget.style.borderColor = config.dotColor; e.currentTarget.style.backgroundColor = config.headerBg; }}
-            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.backgroundColor = ''; }}
+            className="w-full flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold border border-dashed border-[#E8E8E8] dark:border-neutral-800 text-neutral-400 hover:text-black hover:border-black dark:hover:text-white dark:hover:border-white hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-all"
           >
             <Plus size={13} strokeWidth={2.5} /> Add Task
           </button>

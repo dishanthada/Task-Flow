@@ -25,58 +25,26 @@ const BoardCard = ({ board, onUpdate, onDelete }) => {
   const taskCount = board.taskCount ?? 0;
   const completionPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
 
-  // Gradient based on index for visual variety
-  const gradients = [
-    'from-violet-500/10 to-indigo-500/5',
-    'from-blue-500/10 to-cyan-500/5',
-    'from-emerald-500/10 to-teal-500/5',
-    'from-rose-500/10 to-pink-500/5',
-    'from-amber-500/10 to-orange-500/5',
-    'from-purple-500/10 to-violet-500/5',
-  ];
-  const gradientIndex = board._id ? board._id.charCodeAt(board._id.length - 1) % gradients.length : 0;
-  const gradient = gradients[gradientIndex];
-
-  const accentColors = ['#6366f1','#3b82f6','#10b981','#f43f5e','#f59e0b','#8b5cf6'];
-  const accent = accentColors[gradientIndex];
-
   return (
     <>
       <div
-        className="relative flex flex-col rounded-2xl overflow-hidden transition-all duration-250 group"
-        style={{
-          backgroundColor: 'var(--bg-surface)',
-          border: '1px solid var(--border-color)',
-          boxShadow: 'var(--shadow-sm)',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
-          e.currentTarget.style.transform = 'translateY(-3px)';
-          e.currentTarget.style.borderColor = 'var(--border-strong)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
-          e.currentTarget.style.transform = '';
-          e.currentTarget.style.borderColor = 'var(--border-color)';
-        }}
+        className="relative flex flex-col rounded-xl overflow-hidden transition-all duration-200 group bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-black dark:hover:border-white"
       >
-        {/* Gradient Header Strip */}
-        <div className={`h-1.5 w-full bg-gradient-to-r ${gradient}`} style={{ backgroundColor: accent, opacity: 0.8 }} />
+        {/* Minimal Black Top Strip */}
+        <div className="h-1 w-full bg-black dark:bg-white" />
 
         <div className="p-5 flex flex-col flex-1">
-          {/* Top row: icon + menu */}
+          {/* Top Row: Icon + Menu */}
           <div className="flex items-start justify-between mb-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: `${accent}18`, color: accent }}>
-              <Kanban size={20} />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#F5F5F5] dark:bg-neutral-800 text-black dark:text-white flex-shrink-0">
+              <Kanban size={16} />
             </div>
 
-            {/* More menu */}
+            {/* Actions Menu */}
             <div className="relative">
               <button
                 onClick={(e) => { e.preventDefault(); setMenuOpen(v => !v); }}
-                className="btn btn-ghost btn-icon p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ color: 'var(--text-muted)' }}
+                className="p-1 rounded-md text-neutral-400 hover:text-black dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label="Board options"
               >
                 <MoreVertical size={16} />
@@ -84,111 +52,86 @@ const BoardCard = ({ board, onUpdate, onDelete }) => {
 
               {menuOpen && (
                 <div
-                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden animate-scale-in z-20"
-                  style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-xl)' }}
+                  className="absolute right-0 top-full mt-1 w-40 rounded-lg bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 shadow-lg z-20 p-1"
                   onMouseLeave={() => setMenuOpen(false)}
                 >
-                  <div className="p-1.5">
-                    <button
-                      onClick={() => { setMenuOpen(false); setShowEdit(true); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors"
-                      style={{ color: 'var(--text-secondary)' }}
-                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-secondary)'; }}
-                    >
-                      <Pencil size={14} /> Edit Board
-                    </button>
-                    <button
-                      onClick={() => { setMenuOpen(false); setShowDelete(true); }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors text-red-500"
-                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.08)'}
-                      onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}
-                    >
-                      <Trash2 size={14} /> Delete Board
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => { setMenuOpen(false); setShowEdit(true); }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-neutral-600 hover:bg-neutral-50 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white transition-all text-left"
+                  >
+                    <Pencil size={12} /> Edit Board
+                  </button>
+                  <button
+                    onClick={() => { setMenuOpen(false); setShowDelete(true); }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-left"
+                  >
+                    <Trash2 size={12} /> Delete Board
+                  </button>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Title & Description — clickable */}
-          <Link to={`/boards/${board._id}`} className="flex-1 flex flex-col gap-1 mb-4">
-            <h3
-              className="text-base font-semibold leading-tight line-clamp-1 transition-colors duration-150"
-              style={{ color: 'var(--text-primary)' }}
-              onMouseEnter={e => e.currentTarget.style.color = accent}
-              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}
-            >
+          {/* Title & Description */}
+          <Link to={`/boards/${board._id}`} className="flex-1 flex flex-col gap-1.5 mb-4">
+            <h3 className="text-sm font-bold text-black dark:text-white leading-tight line-clamp-1 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
               {board.title}
             </h3>
-            <p className="text-sm line-clamp-2 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
               {board.description || 'No description provided.'}
             </p>
           </Link>
 
-          {/* Progress bar */}
+          {/* Progress Bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Progress</span>
-              <span className="text-xs font-bold" style={{ color: accent }}>{completionPct}%</span>
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Progress</span>
+              <span className="text-xs font-bold text-black dark:text-white">{completionPct}%</span>
             </div>
-            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-surface-3)' }}>
+            <div className="h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${completionPct}%`, backgroundColor: accent }}
+                className="h-full bg-black dark:bg-white rounded-full transition-all duration-300"
+                style={{ width: `${completionPct}%` }}
               />
             </div>
           </div>
 
-          {/* Stats row */}
+          {/* Metadata Row */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: 'var(--bg-surface-2)', color: 'var(--text-muted)' }}>
-                <CheckCircle2 size={13} />
-              </div>
-              <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <div className="flex items-center gap-1.5 text-neutral-500">
+              <CheckCircle2 size={13} />
+              <span className="text-[11px] font-medium">
                 {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
               </span>
             </div>
 
             {board.updatedAt && (
-              <div className="flex items-center gap-1.5 ml-auto">
-                <Clock size={11} style={{ color: 'var(--text-muted)' }} />
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                  {formatDate(board.updatedAt)}
-                </span>
+              <div className="flex items-center gap-1 ml-auto text-neutral-400 text-[10px]">
+                <Clock size={10} />
+                <span>{formatDate(board.updatedAt)}</span>
               </div>
             )}
           </div>
 
-          {/* Footer: Edit, Delete, Open */}
-          <div className="flex items-center gap-2 pt-3" style={{ borderTop: '1px solid var(--border-color)' }}>
+          {/* Footer Actions */}
+          <div className="flex items-center gap-2 pt-3 border-t border-[#E8E8E8] dark:border-neutral-800">
             <button
               onClick={() => setShowEdit(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-              style={{ backgroundColor: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
-              onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-3)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
-              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'var(--bg-surface-2)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#E8E8E8] dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-900 transition-all"
             >
-              <Pencil size={12} /> Edit
+              <Pencil size={11} /> Edit
             </button>
             <button
               onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 text-red-500"
-              style={{ backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.12)'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.06)'}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
             >
-              <Trash2 size={12} /> Delete
+              <Trash2 size={11} /> Delete
             </button>
             <Link
               to={`/boards/${board._id}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 ml-auto text-white"
-              style={{ background: `linear-gradient(135deg,${accent},${accent}cc)`, boxShadow: `0 2px 8px ${accent}40` }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-all ml-auto"
             >
-              Open <ArrowRight size={12} />
+              Open <ArrowRight size={11} />
             </Link>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/dateUtils';
 import Input from '../components/common/Input';
 import Button from '../components/common/Button';
+import { CheckSquare } from 'lucide-react';
 
 const LoginPage = () => {
   const { loginUser } = useAuth();
@@ -49,21 +50,18 @@ const LoginPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ backgroundColor: 'var(--bg-page)' }}
+      className="min-h-screen flex items-center justify-center p-4 bg-[#F5F5F5] dark:bg-[#0A0A0A] transition-colors"
     >
-      <div className="w-full max-w-md animate-fade-in">
+      <div className="w-full max-w-md animate-scale-in">
         {/* Card */}
-        <div className="surface p-8">
+        <div className="bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 rounded-xl p-8 shadow-md">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500 flex items-center justify-center mb-3">
-              <svg width="24" height="24" fill="white" viewBox="0 0 24 24">
-                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
-              </svg>
+            <div className="w-12 h-12 rounded-xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center mb-4 shadow-sm">
+              <CheckSquare size={24} strokeWidth={2.5} />
             </div>
-            <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Welcome back</h1>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            <h1 className="text-xl font-bold text-black dark:text-white">Welcome Back</h1>
+            <p className="text-xs text-neutral-500 mt-1">
               Sign in to your TaskFlow account
             </p>
           </div>
@@ -81,6 +79,7 @@ const LoginPage = () => {
               error={errors.email}
               required
               autoComplete="email"
+              className="rounded-lg text-xs"
             />
             <Input
               id="login-password"
@@ -93,21 +92,22 @@ const LoginPage = () => {
               error={errors.password}
               required
               autoComplete="current-password"
+              className="rounded-lg text-xs"
             />
 
             <Button
               type="submit"
               loading={loading}
-              className="w-full mt-2 btn-lg"
+              className="w-full mt-2 btn-primary rounded-lg text-xs font-semibold py-2.5"
             >
               Sign In
             </Button>
           </form>
 
           {/* Footer link */}
-          <p className="text-center text-sm mt-6" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-center text-xs text-neutral-500 mt-6">
             Don&apos;t have an account?{' '}
-            <Link to="/register" className="font-medium" style={{ color: 'var(--color-primary)' }}>
+            <Link to="/register" className="font-semibold text-black dark:text-white hover:underline">
               Create one free
             </Link>
           </p>

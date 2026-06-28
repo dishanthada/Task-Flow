@@ -19,3 +19,8 @@ export const updateTheme = async (theme) => {
   const res = await axiosInstance.put('/auth/theme', { theme });
   return res.data;
 };
+
+export const googleLogin = async (data) => {
+  const res = await axiosInstance.post('/auth/google', data);
+  return res.data;
+};

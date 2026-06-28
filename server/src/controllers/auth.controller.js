@@ -1,5 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { OAuth2Client } = require('google-auth-library');
+
+const oAuth2Client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  'postmessage'
+);
 
 /**
  * Generate a signed JWT token for a given user ID.
@@ -158,4 +165,69 @@ const updateTheme = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, getMe, updateTheme };
+/**
+ * @desc    Google login using Authorization Code Flow
+ * @route   POST /api/auth/google
+ * @access  Public
+ */
+const googleLogin = async (req, res, next) => {
+  try {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: 'Authorization code is required',
+      });
+    }
+
+    // Exchange authorization code for tokens
+    const { tokens } = await oAuth2Client.getToken(code);
+
+    // Verify the ID token securely
+    const ticket = await oAuth2Client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name } = payload;
+
+    // Check if user already exists
+    let user = await User.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      // Create user with a dummy password since they authenticate via Google
+      user = await User.create({
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        passwordHash: 'GOOGLE_AUTH_MANAGED_' + Date.now(),
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Google login successful',
+      data: {
+        token,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          theme: user.theme,
+          createdAt: user.createdAt,
+        },
+      },
+    });
+  } catch (error) {
+    // If the token is invalid or expired
+    if (error.message && error.message.includes('Token used too late')) {
+      return res.status(401).json({ success: false, message: 'Google token expired' });
+    }
+    next(error);
+  }
+};
+
+module.exports = { register, login, getMe, updateTheme, googleLogin };

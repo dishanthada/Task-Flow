@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { register, login, getMe, updateTheme } = require('../controllers/auth.controller');
+const { register, login, getMe, updateTheme, googleLogin } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 
@@ -39,6 +39,7 @@ const themeValidation = [
 // Routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
+router.post('/google', googleLogin);
 router.get('/me', protect, getMe);
 router.put('/theme', protect, themeValidation, validate, updateTheme);
 

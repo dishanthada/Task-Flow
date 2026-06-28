@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { register } from '../api/authApi';
+import { register, googleLogin } from '../api/authApi';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/dateUtils';
 import { CheckSquare, Loader2 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion } from 'framer-motion';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const GridBackground = ({ isDark }) => {
   const gridColor = isDark ? '%23ffffff' : '%23000000';
@@ -86,9 +87,23 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleAuth = () => {
-    // Deliberately doing nothing to prevent ugly errors per requirements
-  };
+  const handleGoogleAuth = useGoogleLogin({
+    flow: 'auth-code',
+    onSuccess: async (codeResponse) => {
+      setLoading(true);
+      try {
+        const res = await googleLogin({ code: codeResponse.code });
+        loginUser(res.data);
+        toast.success(`Welcome back, ${res.data.user.name}! 👋`);
+        navigate('/dashboard');
+      } catch (err) {
+        toast.error(getErrorMessage(err) || 'Google Auth failed');
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => toast.error('Google Sign In failed'),
+  });
 
   const inputStyle = (err) => ({
     height: 54,

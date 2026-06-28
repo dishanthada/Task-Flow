@@ -137,8 +137,8 @@ const RegisterPage = () => {
         >
           
           {/* Logo Section */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 16 }}>
               <div style={{
                 width: 44, height: 44,
                 borderRadius: 12,
@@ -174,9 +174,9 @@ const RegisterPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label htmlFor="name" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Full name
               </label>
@@ -195,7 +195,7 @@ const RegisterPage = () => {
               {errors.name && <span style={{ fontSize: 12, color: 'var(--red)' }}>{errors.name}</span>}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label htmlFor="email" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Email address
               </label>
@@ -214,7 +214,7 @@ const RegisterPage = () => {
               {errors.email && <span style={{ fontSize: 12, color: 'var(--red)' }}>{errors.email}</span>}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label htmlFor="password" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Password
               </label>
@@ -233,7 +233,7 @@ const RegisterPage = () => {
               {errors.password && <span style={{ fontSize: 12, color: 'var(--red)' }}>{errors.password}</span>}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label htmlFor="confirmPassword" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Confirm password
               </label>

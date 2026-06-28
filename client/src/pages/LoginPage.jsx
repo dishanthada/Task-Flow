@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 const GridBackground = ({ isDark }) => {
   const gridColor = isDark ? '%23ffffff' : '%23000000';
-  const gridOpacity = isDark ? '0.02' : '0.025';
+  const gridOpacity = isDark ? '0.015' : '0.02';
   
   return (
     <>
@@ -22,15 +22,15 @@ const GridBackground = ({ isDark }) => {
       <div style={{
         position: 'fixed', inset: 0, zIndex: 1, pointerEvents: 'none',
         background: isDark 
-          ? 'radial-gradient(circle at 50% 0%, rgba(255,255,255,0.04) 0%, transparent 70%)' 
-          : 'radial-gradient(circle at 50% 0%, rgba(0,0,0,0.03) 0%, transparent 70%)',
+          ? 'radial-gradient(circle at 50% -20%, rgba(255,255,255,0.06) 0%, rgba(10,10,10,1) 80%)' 
+          : 'radial-gradient(circle at 50% -20%, rgba(255,255,255,0.8) 0%, rgba(246,246,248,1) 80%)',
       }} />
     </>
   );
 };
 
 const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -86,16 +86,16 @@ const LoginPage = () => {
   };
 
   const inputStyle = (err) => ({
-    height: 52,
+    height: 54,
     width: '100%',
     borderRadius: 14,
     background: 'var(--bg-surface-2)',
     border: `1.5px solid ${err ? 'var(--red)' : 'var(--border-color)'}`,
-    padding: '0 18px',
+    padding: '0 20px',
     fontSize: 14.5,
     color: 'var(--text-primary)',
     outline: 'none',
-    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+    transition: 'all 0.3s ease',
     fontFamily: 'inherit',
   });
 
@@ -103,61 +103,62 @@ const LoginPage = () => {
     <div style={{
       minHeight: '100vh',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '48px 16px', // extra padding to ensure breathing room when scrolling
-      background: 'var(--bg-page)',
+      padding: '40px 16px', 
+      background: isDark ? '#0a0a0a' : '#f6f6f8',
       position: 'relative',
     }}>
       <GridBackground isDark={isDark} />
       
       <motion.div 
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-[92%] sm:max-w-[420px] md:max-w-[460px] lg:max-w-[480px]"
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="w-[92%] sm:max-w-[460px] md:max-w-[500px] lg:max-w-[520px]"
         style={{
           position: 'relative',
           zIndex: 10,
         }}
       >
-        {/* Card */}
         <div 
-          className="p-8 sm:p-10 lg:p-12"
+          className="p-8 sm:p-10"
           style={{
             background: 'var(--bg-surface)',
             border: '1px solid var(--border-color)',
             borderRadius: 20,
-            boxShadow: isDark ? '0 24px 80px rgba(0,0,0,0.8)' : '0 24px 80px rgba(0,0,0,0.07)',
+            boxShadow: isDark ? '0 10px 40px -10px rgba(0,0,0,0.8)' : '0 10px 40px -10px rgba(0,0,0,0.06)',
             display: 'flex', flexDirection: 'column',
           }}
         >
-          
-          {/* Logo & Header */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 40 }}>
-            <div style={{
-              width: 56, height: 56,
-              borderRadius: 16,
-              background: 'var(--text-primary)',
-              color: 'var(--bg-surface)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 24,
-              boxShadow: isDark ? '0 4px 24px rgba(255,255,255,0.1)' : '0 4px 24px rgba(0,0,0,0.15)',
-            }}>
-              <CheckSquare size={28} strokeWidth={2.5} />
+          {/* Logo Section */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+              <div style={{
+                width: 44, height: 44,
+                borderRadius: 12,
+                background: 'var(--text-primary)',
+                color: 'var(--bg-surface)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: isDark ? '0 4px 16px rgba(255,255,255,0.08)' : '0 4px 16px rgba(0,0,0,0.1)',
+              }}>
+                <CheckSquare size={22} strokeWidth={2.5} />
+              </div>
+              <span style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.04em', color: 'var(--text-primary)' }}>TaskFlow</span>
             </div>
+
             <h1 style={{
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: 700,
               color: 'var(--text-primary)',
               letterSpacing: '-0.03em',
               lineHeight: 1.2,
               textAlign: 'center',
+              marginBottom: 8,
             }}>
               Welcome Back
             </h1>
             <p style={{
-              fontSize: 15,
+              fontSize: 14.5,
               color: 'var(--text-muted)',
-              marginTop: 10,
               textAlign: 'center',
               fontWeight: 500,
             }}>
@@ -166,8 +167,8 @@ const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label htmlFor="email" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
                 Email address
               </label>
@@ -183,15 +184,13 @@ const LoginPage = () => {
                 onBlur={e => { e.target.style.borderColor = errors.email ? 'var(--red)' : 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                 autoComplete="email"
               />
-              {errors.email && <span style={{ fontSize: 12, color: 'var(--red)', marginTop: 2 }}>{errors.email}</span>}
+              {errors.email && <span style={{ fontSize: 12, color: 'var(--red)' }}>{errors.email}</span>}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label htmlFor="password" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
-                  Password
-                </label>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label htmlFor="password" style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--text-primary)' }}>
+                Password
+              </label>
               <input
                 id="password"
                 name="password"
@@ -204,7 +203,7 @@ const LoginPage = () => {
                 onBlur={e => { e.target.style.borderColor = errors.password ? 'var(--red)' : 'var(--border-color)'; e.target.style.boxShadow = 'none'; }}
                 autoComplete="current-password"
               />
-              {errors.password && <span style={{ fontSize: 12, color: 'var(--red)', marginTop: 2 }}>{errors.password}</span>}
+              {errors.password && <span style={{ fontSize: 12, color: 'var(--red)' }}>{errors.password}</span>}
             </div>
 
             <button
@@ -213,9 +212,9 @@ const LoginPage = () => {
               onMouseEnter={() => setBtnHover(true)}
               onMouseLeave={() => setBtnHover(false)}
               onMouseDown={e => { if (!loading) e.currentTarget.style.transform = 'scale(0.98)'; }}
-              onMouseUp={e => { if (!loading) e.currentTarget.style.transform = btnHover ? 'translateY(-1px)' : 'none'; }}
+              onMouseUp={e => { if (!loading) e.currentTarget.style.transform = btnHover ? 'translateY(-2px)' : 'none'; }}
               style={{
-                height: 52,
+                height: 54,
                 width: '100%',
                 marginTop: 4,
                 borderRadius: 14,
@@ -226,11 +225,11 @@ const LoginPage = () => {
                 fontWeight: 600,
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transition: 'all 0.3s ease',
                 opacity: loading ? 0.7 : 1,
-                transform: btnHover && !loading ? 'translateY(-1px)' : 'none',
+                transform: btnHover && !loading ? 'translateY(-2px)' : 'none',
                 boxShadow: btnHover && !loading 
-                  ? (isDark ? '0 8px 24px rgba(255,255,255,0.15)' : '0 8px 24px rgba(0,0,0,0.25)') 
+                  ? (isDark ? '0 6px 20px rgba(255,255,255,0.1)' : '0 6px 20px rgba(0,0,0,0.15)') 
                   : 'none',
               }}
             >
@@ -242,7 +241,7 @@ const LoginPage = () => {
           {/* Divider */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 16,
-            margin: '36px 0',
+            margin: '24px 0',
           }}>
             <div style={{ flex: 1, height: 1, background: 'var(--border-color)', opacity: 0.6 }} />
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>
@@ -258,9 +257,9 @@ const LoginPage = () => {
             onMouseEnter={() => setGoogleHover(true)}
             onMouseLeave={() => setGoogleHover(false)}
             onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
-            onMouseUp={e => { e.currentTarget.style.transform = googleHover ? 'translateY(-1px)' : 'none'; }}
+            onMouseUp={e => { e.currentTarget.style.transform = googleHover ? 'translateY(-2px)' : 'none'; }}
             style={{
-              height: 52,
+              height: 54,
               width: '100%',
               borderRadius: 14,
               background: '#FFFFFF',
@@ -269,43 +268,42 @@ const LoginPage = () => {
               fontSize: 15,
               fontWeight: 600,
               cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-              transform: googleHover ? 'translateY(-1px)' : 'none',
-              boxShadow: googleHover ? '0 8px 24px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.02)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16,
+              transition: 'all 0.3s ease',
+              transform: googleHover ? 'translateY(-2px)' : 'none',
+              boxShadow: googleHover ? '0 6px 20px rgba(0,0,0,0.06)' : '0 2px 8px rgba(0,0,0,0.02)',
               position: 'relative',
             }}
           >
             <GoogleIcon />
             Continue with Google
           </button>
-        </div>
-        
-        {/* Footer */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: 32,
-        }}>
-          <span style={{ fontSize: 14.5, color: 'var(--text-muted)', fontWeight: 500 }}>
-            Don&apos;t have an account?
-          </span>
-          {' '}
-          <Link 
-            to="/register" 
-            style={{
-              color: 'var(--text-primary)',
-              fontWeight: 600,
-              fontSize: 14.5,
-              textDecoration: 'none',
-              paddingBottom: 2,
-              borderBottom: '1.5px solid transparent',
-              transition: 'border-color 0.2s ease',
-            }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--text-primary)'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
-          >
-            Create one free
-          </Link>
+          
+          {/* Footer (Inside Card) */}
+          <div style={{
+            textAlign: 'center',
+            marginTop: 20,
+            paddingTop: 8,
+          }}>
+            <span style={{ fontSize: 14.5, color: 'var(--text-muted)', fontWeight: 500 }}>
+              Don't have an account?
+            </span>
+            {' '}
+            <Link 
+              to="/register" 
+              style={{
+                color: 'var(--text-primary)',
+                fontWeight: 600,
+                fontSize: 14.5,
+                textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              Create Account
+            </Link>
+          </div>
         </div>
       </motion.div>
     </div>

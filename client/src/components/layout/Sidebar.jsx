@@ -1,29 +1,145 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, CheckSquare, Sun, Moon, LogOut,
-  Sparkles, ChevronLeft, ChevronRight, Folder, Tag,
-  Users, Settings, Calendar, BarChart2
+  LayoutDashboard, Layout, Calendar, BarChart2,
+  Sparkles, Users, Settings, LogOut, Sun, Moon,
+  CheckSquare, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
+/* ─── Nav structure ─────────────────────────────────────────────── */
+const NAV_CATEGORIES = [
+  {
+    key: 'workspace',
+    label: 'WORKSPACE',
+    items: [
+      { to: '/dashboard',                label: 'Dashboard',  Icon: LayoutDashboard },
+      { to: '/dashboard?tab=boards',     label: 'Boards',     Icon: Layout          },
+      { to: '/dashboard?tab=calendar',   label: 'Calendar',   Icon: Calendar        },
+      { to: '/dashboard?tab=analytics',  label: 'Analytics',  Icon: BarChart2       },
+    ],
+  },
+  {
+    key: 'ai',
+    label: 'AI',
+    items: [
+      { to: '/dashboard?tab=analytics', label: 'AI Assistant', Icon: Sparkles, badge: 'New' },
+    ],
+  },
+  {
+    key: 'management',
+    label: 'MANAGEMENT',
+    items: [
+      { to: '/dashboard?tab=team',      label: 'Members',  Icon: Users    },
+      { to: '/dashboard?tab=settings',  label: 'Settings', Icon: Settings },
+    ],
+  },
+];
+
+/* ─── Nav Item ──────────────────────────────────────────────────── */
+const NavItem = ({ to, label, Icon, badge, active, collapsed, onClose }) => {
+  const [hovered, setHovered] = useState(false);
+
+  const bg = active
+    ? '#FFFFFF'
+    : hovered
+      ? 'rgba(255,255,255,0.07)'
+      : 'transparent';
+
+  const fg = active
+    ? '#000000'
+    : hovered
+      ? '#FFFFFF'
+      : 'rgba(255,255,255,0.5)';
+
+  return (
+    <NavLink
+      to={to}
+      onClick={onClose}
+      title={collapsed ? label : undefined}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: collapsed ? '10px 0' : '9px 12px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        borderRadius: 10,
+        background: bg,
+        color: fg,
+        fontWeight: active ? 600 : 450,
+        fontSize: 13,
+        textDecoration: 'none',
+        transition: 'background 0.15s ease, color 0.15s ease',
+        letterSpacing: '-0.01em',
+        position: 'relative',
+        flexShrink: 0,
+      }}
+    >
+      <Icon
+        size={15}
+        strokeWidth={active ? 2.5 : 1.75}
+        style={{ flexShrink: 0, transition: 'stroke-width 0.15s ease' }}
+      />
+
+      <AnimatePresence>
+        {!collapsed && (
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {label}
+          </motion.span>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {!collapsed && badge && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              fontSize: 9, fontWeight: 700,
+              padding: '2px 6px', borderRadius: 4,
+              background: 'rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.65)',
+              letterSpacing: '0.06em',
+              flexShrink: 0,
+            }}
+          >
+            {badge}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </NavLink>
+  );
+};
+
+/* ─── Main Sidebar ──────────────────────────────────────────────── */
 const Sidebar = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Local state for collapse, persisted in localStorage
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    return localStorage.getItem('taskflow_sidebar_collapsed') === 'true';
-  });
+  const [isCollapsed, setIsCollapsed] = useState(() =>
+    localStorage.getItem('taskflow_sidebar_collapsed') === 'true'
+  );
+  const [logoutHover, setLogoutHover] = useState(false);
+  const [themeHover, setThemeHover] = useState(false);
+  const [collapseHover, setCollapseHover] = useState(false);
 
   const handleToggleCollapse = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    localStorage.setItem('taskflow_sidebar_collapsed', String(newState));
+    const next = !isCollapsed;
+    setIsCollapsed(next);
+    localStorage.setItem('taskflow_sidebar_collapsed', String(next));
   };
 
   const handleLogout = () => {
@@ -35,228 +151,347 @@ const Sidebar = ({ isOpen, onClose }) => {
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U';
 
-  const mainNavItems = [
-    { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-    { to: '/dashboard?tab=boards', label: 'My Boards', Icon: Folder },
-    { to: '/dashboard?tab=calendar', label: 'Calendar', Icon: Calendar },
-    { to: '/dashboard?tab=analytics', label: 'Analytics', Icon: BarChart2 },
-  ];
-
-  const managementNavItems = [
-    { to: '/dashboard?tab=team', label: 'Members', Icon: Users },
-    { to: '/dashboard?tab=settings', label: 'Settings', Icon: Settings },
-  ];
-
-  // Helper to determine if item is active
   const isItemActive = (to) => {
-    const currentPath = location.pathname + location.search;
-    if (to === '/dashboard') {
-      return currentPath === '/dashboard' || currentPath === '/dashboard/';
-    }
-    return currentPath === to;
+    const current = location.pathname + location.search;
+    if (to === '/dashboard') return current === '/dashboard' || current === '/dashboard/';
+    return current === to;
   };
+
+  const sidebarW = isCollapsed ? 72 : 240;
 
   return (
     <>
       {/* Mobile overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-30 lg:hidden bg-black/60 backdrop-blur-xs"
-          onClick={onClose}
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            key="overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={onClose}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 30,
+              background: 'rgba(0,0,0,0.65)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+            }}
+            className="lg:hidden"
+          />
+        )}
+      </AnimatePresence>
 
-      <aside
-        className={`
-          fixed top-0 left-0 h-full z-40 flex flex-col
-          transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)
-          lg:translate-x-0 lg:static lg:z-auto
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          ${isCollapsed ? 'w-20' : 'w-64'}
-          p-4
-        `}
+      {/* Sidebar panel */}
+      <motion.aside
+        animate={{ width: sidebarW, minWidth: sidebarW }}
+        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          backgroundColor: 'var(--bg-sidebar)',
+          background: '#090909',
+          height: '100%',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: 40,
+          position: 'relative',
         }}
+        className={[
+          'fixed top-0 left-0 h-full',
+          'lg:relative lg:z-auto lg:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]',
+        ].join(' ')}
       >
-        <div className="flex flex-col h-full bg-[#121214] rounded-2xl border border-white/5 relative overflow-hidden">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3 px-4 py-5 border-b border-white/5 flex-shrink-0">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white flex-shrink-0">
-              <CheckSquare size={16} className="text-black" strokeWidth={2.5} />
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', padding: 12 }}>
+
+          {/* ── Logo ──────────────────────────────────────────── */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: isCollapsed ? '14px 0' : '14px 8px',
+            justifyContent: isCollapsed ? 'center' : 'flex-start',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            marginBottom: 12,
+            flexShrink: 0,
+          }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 9,
+              background: '#FFFFFF',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}>
+              <CheckSquare size={15} color="#000000" strokeWidth={2.5} />
             </div>
-            {!isCollapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="flex-1 min-w-0"
-              >
-                <h1 className="text-white font-bold text-sm tracking-tight leading-none">TaskFlow</h1>
-                <p className="text-[10px] mt-0.5 text-white/40">Smart Task Manager</p>
-              </motion.div>
-            )}
+
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -6 }}
+                  transition={{ duration: 0.18 }}
+                  style={{ flex: 1, overflow: 'hidden' }}
+                >
+                  <div style={{
+                    color: '#FFFFFF',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    letterSpacing: '-0.025em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    TaskFlow
+                  </div>
+                  <div style={{
+                    color: 'rgba(255,255,255,0.3)',
+                    fontSize: 10,
+                    marginTop: 3,
+                    letterSpacing: '0.03em',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    Task Manager
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Navigation Section */}
-          <div className="flex-1 px-2.5 py-4 flex flex-col gap-6 overflow-y-auto">
-            {/* Main Nav */}
-            <div>
-              {!isCollapsed && (
-                <p className="text-[10px] font-semibold px-3 mb-2 text-white/30 uppercase tracking-wider">
-                  Main
-                </p>
-              )}
-              <div className="flex flex-col gap-1">
-                {mainNavItems.map(({ to, label, Icon }) => {
-                  const active = isItemActive(to);
-                  return (
-                    <NavLink
+          {/* ── Navigation ────────────────────────────────────── */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 24,
+          }}>
+            {NAV_CATEGORIES.map(({ key, label, items }) => (
+              <div key={key}>
+                {/* Category label */}
+                <AnimatePresence>
+                  {!isCollapsed && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        color: 'rgba(255,255,255,0.22)',
+                        fontSize: 9,
+                        fontWeight: 700,
+                        letterSpacing: '0.14em',
+                        padding: '0 12px',
+                        marginBottom: 6,
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {label}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Nav items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {items.map(({ to, label: itemLabel, Icon, badge }) => (
+                    <NavItem
                       key={to}
                       to={to}
-                      onClick={onClose}
-                      className={`
-                        flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200
-                        ${active 
-                          ? 'bg-white text-black font-semibold shadow-sm' 
-                          : 'text-white/50 hover:bg-white/5 hover:text-white'
-                        }
-                      `}
-                    >
-                      <Icon size={16} strokeWidth={active ? 2.5 : 2} className="flex-shrink-0" />
-                      {!isCollapsed && (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="truncate"
-                        >
-                          {label}
-                        </motion.span>
-                      )}
-                    </NavLink>
-                  );
-                })}
+                      label={itemLabel}
+                      Icon={Icon}
+                      badge={badge}
+                      active={isItemActive(to)}
+                      collapsed={isCollapsed}
+                      onClose={onClose}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
 
-            {/* AI Assistant Powered Section */}
-            <div>
-              {!isCollapsed && (
-                <p className="text-[10px] font-semibold px-3 mb-2 text-white/30 uppercase tracking-wider">
-                  AI Powered
-                </p>
-              )}
-              <NavLink
-                to="/dashboard?tab=ai"
-                onClick={onClose}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200
-                  ${isItemActive('/dashboard?tab=ai')
-                    ? 'bg-white text-black font-semibold'
-                    : 'text-white/50 hover:bg-white/5 hover:text-white'
-                  }
-                `}
-              >
-                <Sparkles size={16} className={isItemActive('/dashboard?tab=ai') ? 'text-black' : 'text-[#A855F7] animate-pulse'} />
+          {/* ── Bottom Controls ────────────────────────────────── */}
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            paddingTop: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 3,
+            flexShrink: 0,
+          }}>
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={isCollapsed ? (isDark ? 'Light Mode' : 'Dark Mode') : undefined}
+              onMouseEnter={() => setThemeHover(true)}
+              onMouseLeave={() => setThemeHover(false)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                padding: isCollapsed ? '9px 0' : '9px 12px',
+                borderRadius: 10,
+                background: themeHover ? 'rgba(255,255,255,0.06)' : 'transparent',
+                border: 'none',
+                color: themeHover ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.38)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                width: '100%',
+                fontSize: 13,
+              }}
+            >
+              {isDark
+                ? <Sun size={14} strokeWidth={1.75} />
+                : <Moon size={14} strokeWidth={1.75} />
+              }
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {isDark ? 'Light Mode' : 'Dark Mode'}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+
+            {/* User profile card */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: isCollapsed ? '8px 0' : '8px 10px',
+              justifyContent: isCollapsed ? 'center' : 'flex-start',
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.06)',
+              overflow: 'hidden',
+            }}>
+              {/* Avatar */}
+              <div style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: '#FFFFFF', color: '#000000',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, fontWeight: 800,
+                letterSpacing: '-0.02em',
+                flexShrink: 0,
+              }}>
+                {initials}
+              </div>
+
+              {/* Name + Email */}
+              <AnimatePresence>
                 {!isCollapsed && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex-1 flex items-center justify-between min-w-0"
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}
                   >
-                    <span>AI Assistant</span>
-                    <span className="bg-white/10 text-white text-[9px] px-1.5 py-0.5 rounded font-bold">New</span>
+                    <div style={{
+                      color: '#FFFFFF',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      lineHeight: 1,
+                      letterSpacing: '-0.01em',
+                    }}>
+                      {user?.name}
+                    </div>
+                    <div style={{
+                      color: 'rgba(255,255,255,0.32)',
+                      fontSize: 10,
+                      marginTop: 3,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}>
+                      {user?.email}
+                    </div>
                   </motion.div>
                 )}
-              </NavLink>
+              </AnimatePresence>
+
+              {/* Logout icon */}
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={handleLogout}
+                    title="Sign out"
+                    onMouseEnter={() => setLogoutHover(true)}
+                    onMouseLeave={() => setLogoutHover(false)}
+                    style={{
+                      padding: 5, borderRadius: 6,
+                      border: 'none',
+                      background: logoutHover ? 'rgba(220,38,38,0.15)' : 'transparent',
+                      color: logoutHover ? '#DC2626' : 'rgba(255,255,255,0.28)',
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'all 0.15s ease',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <LogOut size={13} />
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Management Section */}
-            <div>
-              {!isCollapsed && (
-                <p className="text-[10px] font-semibold px-3 mb-2 text-white/30 uppercase tracking-wider">
-                  Management
-                </p>
-              )}
-              <div className="flex flex-col gap-1">
-                {managementNavItems.map(({ to, label, Icon }) => {
-                  const active = isItemActive(to);
-                  return (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      onClick={onClose}
-                      className={`
-                        flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium transition-all duration-200
-                        ${active 
-                          ? 'bg-white text-black font-semibold shadow-sm' 
-                          : 'text-white/50 hover:bg-white/5 hover:text-white'
-                        }
-                      `}
-                    >
-                      <Icon size={16} strokeWidth={active ? 2.5 : 2} className="flex-shrink-0" />
-                      {!isCollapsed && (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="truncate"
-                        >
-                          {label}
-                        </motion.span>
-                      )}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Controls */}
-          <div className="p-3 border-t border-white/5 flex flex-col gap-2 flex-shrink-0">
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/50 hover:bg-white/5 hover:text-white transition-all w-full text-left"
-            >
-              {isDark ? <Sun size={15} /> : <Moon size={15} />}
-              {!isCollapsed && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
-            </button>
-
-            {/* User Profile Info Card */}
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 relative overflow-hidden">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white text-black text-xs font-bold flex-shrink-0 shadow-sm">
-                {initials}
-              </div>
-              {!isCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex-1 min-w-0"
-                >
-                  <p className="text-white text-xs font-semibold truncate leading-none">{user?.name}</p>
-                  <p className="text-[10px] text-white/40 truncate mt-1">{user?.email}</p>
-                </motion.div>
-              )}
-              <button
-                onClick={handleLogout}
-                className="p-1.5 rounded-lg text-white/40 hover:bg-red-500/10 hover:text-red-400 transition-colors flex-shrink-0"
-                title="Sign out"
-              >
-                <LogOut size={14} />
-              </button>
-            </div>
-
-            {/* Collapse Sidebar Button */}
+            {/* Collapse button — desktop only */}
             <button
               onClick={handleToggleCollapse}
-              className="hidden lg:flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-white/40 hover:bg-white/5 hover:text-white transition-all w-full text-left"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              onMouseEnter={() => setCollapseHover(true)}
+              onMouseLeave={() => setCollapseHover(false)}
+              style={{
+                display: 'none',
+                alignItems: 'center',
+                gap: 10,
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                padding: isCollapsed ? '8px 0' : '8px 12px',
+                borderRadius: 10,
+                background: collapseHover ? 'rgba(255,255,255,0.05)' : 'transparent',
+                border: 'none',
+                color: collapseHover ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.25)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                width: '100%',
+                fontSize: 12,
+              }}
+              className="lg:flex"
             >
-              {isCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
-              {!isCollapsed && <span>Collapse Sidebar</span>}
+              {isCollapsed
+                ? <PanelLeft size={14} strokeWidth={1.75} />
+                : <PanelLeftClose size={14} strokeWidth={1.75} />
+              }
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    Collapse Sidebar
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </button>
           </div>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 };

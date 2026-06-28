@@ -3,7 +3,7 @@ import Spinner from './Spinner';
 /**
  * Reusable Button component.
  * variant: primary | secondary | danger | ghost
- * size: sm | md | lg
+ * size: sm | md | lg | icon
  */
 const Button = ({
   children,
@@ -22,13 +22,14 @@ const Button = ({
     secondary: 'btn-secondary',
     danger:    'btn-danger',
     ghost:     'btn-ghost',
-  }[variant] || 'btn-primary';
+  }[variant] ?? 'btn-primary';
 
   const sizeClass = {
-    sm: 'btn-sm',
-    md: '',
-    lg: 'btn-lg',
-  }[size] || '';
+    sm:   'btn-sm',
+    md:   '',
+    lg:   'btn-lg',
+    icon: 'btn-icon',
+  }[size] ?? '';
 
   return (
     <button
@@ -38,11 +39,10 @@ const Button = ({
       className={`btn ${variantClass} ${sizeClass} ${className}`}
       {...props}
     >
-      {loading ? (
-        <Spinner size="sm" />
-      ) : (
-        icon && <span className="flex-shrink-0">{icon}</span>
-      )}
+      {loading
+        ? <Spinner size="sm" />
+        : icon && <span style={{ display: 'flex', flexShrink: 0 }}>{icon}</span>
+      }
       {children}
     </button>
   );

@@ -1,18 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Pencil, Trash2, ArrowRight, CheckCircle2, Clock,
-  Kanban, MoreVertical
-} from 'lucide-react';
+import { Pencil, Trash2, ArrowRight, CheckCircle2, Clock, Kanban } from 'lucide-react';
+import { motion } from 'framer-motion';
 import ConfirmDialog from '../common/ConfirmDialog';
 import BoardForm from './BoardForm';
 import { formatDate } from '../../utils/dateUtils';
 
 const BoardCard = ({ board, onUpdate, onDelete }) => {
-  const [showEdit, setShowEdit] = useState(false);
+  const [showEdit,   setShowEdit]   = useState(false);
   const [showDelete, setShowDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [deleting,   setDeleting]   = useState(false);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -22,120 +19,230 @@ const BoardCard = ({ board, onUpdate, onDelete }) => {
   };
 
   const completedCount = board.completedCount ?? 0;
-  const taskCount = board.taskCount ?? 0;
-  const completionPct = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
+  const taskCount      = board.taskCount ?? 0;
+  const pct            = taskCount > 0 ? Math.round((completedCount / taskCount) * 100) : 0;
 
   return (
     <>
-      <div
-        className="relative flex flex-col rounded-xl overflow-hidden transition-all duration-200 group bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 shadow-xs hover:shadow-md hover:-translate-y-1 hover:border-black dark:hover:border-white"
+      <motion.div
+        whileHover={{ y: -5, boxShadow: '0 16px 40px rgba(0,0,0,0.10)' }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-color)',
+          borderRadius: 18,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: 'var(--shadow-sm)',
+          height: '100%',
+          minHeight: 240,
+          cursor: 'default',
+        }}
       >
-        {/* Minimal Black Top Strip */}
-        <div className="h-1 w-full bg-black dark:bg-white" />
+        {/* Top accent bar */}
+        <div style={{ height: 3, background: 'var(--color-primary)', flexShrink: 0 }} />
 
-        <div className="p-5 flex flex-col flex-1">
-          {/* Top Row: Icon + Menu */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#F5F5F5] dark:bg-neutral-800 text-black dark:text-white flex-shrink-0">
-              <Kanban size={16} />
+        {/* Card body */}
+        <div style={{ padding: '22px 24px', display: 'flex', flexDirection: 'column', flex: 1, gap: 0 }}>
+
+          {/* Icon row */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 11,
+              background: 'var(--bg-surface-3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text-secondary)',
+              flexShrink: 0,
+            }}>
+              <Kanban size={16} strokeWidth={1.75} />
             </div>
 
-            {/* Actions Menu */}
-            <div className="relative">
-              <button
-                onClick={(e) => { e.preventDefault(); setMenuOpen(v => !v); }}
-                className="p-1 rounded-md text-neutral-400 hover:text-black dark:hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label="Board options"
-              >
-                <MoreVertical size={16} />
-              </button>
-
-              {menuOpen && (
-                <div
-                  className="absolute right-0 top-full mt-1 w-40 rounded-lg bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 shadow-lg z-20 p-1"
-                  onMouseLeave={() => setMenuOpen(false)}
-                >
-                  <button
-                    onClick={() => { setMenuOpen(false); setShowEdit(true); }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-neutral-600 hover:bg-neutral-50 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-900 dark:hover:text-white transition-all text-left"
-                  >
-                    <Pencil size={12} /> Edit Board
-                  </button>
-                  <button
-                    onClick={() => { setMenuOpen(false); setShowDelete(true); }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-left"
-                  >
-                    <Trash2 size={12} /> Delete Board
-                  </button>
-                </div>
-              )}
+            {/* Task count badge */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontSize: 11, fontWeight: 600,
+              color: 'var(--text-muted)',
+              background: 'var(--bg-surface-3)',
+              padding: '4px 10px', borderRadius: 20,
+            }}>
+              <CheckCircle2 size={11} />
+              {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
             </div>
           </div>
 
-          {/* Title & Description */}
-          <Link to={`/boards/${board._id}`} className="flex-1 flex flex-col gap-1.5 mb-4">
-            <h3 className="text-sm font-bold text-black dark:text-white leading-tight line-clamp-1 group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
+          {/* Title + Description */}
+          <Link
+            to={`/boards/${board._id}`}
+            style={{ textDecoration: 'none', display: 'block', marginBottom: 18, flex: 1 }}
+          >
+            <h3 style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.25,
+              marginBottom: 8,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: 'vertical',
+              transition: 'color 0.15s ease',
+            }}>
               {board.title}
             </h3>
-            <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
+            <p style={{
+              fontSize: 13,
+              color: 'var(--text-muted)',
+              lineHeight: 1.55,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+            }}>
               {board.description || 'No description provided.'}
             </p>
           </Link>
 
-          {/* Progress Bar */}
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Progress</span>
-              <span className="text-xs font-bold text-black dark:text-white">{completionPct}%</span>
+          {/* Progress */}
+          <div style={{ marginBottom: 18 }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: 7,
+            }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                Progress
+              </span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+                {pct}%
+              </span>
             </div>
-            <div className="h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-black dark:bg-white rounded-full transition-all duration-300"
-                style={{ width: `${completionPct}%` }}
+            <div style={{
+              height: 5, borderRadius: 99,
+              background: 'var(--bg-surface-3)',
+              overflow: 'hidden',
+            }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  height: '100%',
+                  borderRadius: 99,
+                  background: 'var(--color-primary)',
+                }}
               />
             </div>
           </div>
 
-          {/* Metadata Row */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex items-center gap-1.5 text-neutral-500">
-              <CheckCircle2 size={13} />
-              <span className="text-[11px] font-medium">
-                {taskCount} {taskCount === 1 ? 'task' : 'tasks'}
-              </span>
+          {/* Meta row */}
+          {board.updatedAt && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              fontSize: 11, color: 'var(--text-muted)',
+              marginBottom: 18,
+            }}>
+              <Clock size={11} />
+              <span>Updated {formatDate(board.updatedAt)}</span>
             </div>
+          )}
 
-            {board.updatedAt && (
-              <div className="flex items-center gap-1 ml-auto text-neutral-400 text-[10px]">
-                <Clock size={10} />
-                <span>{formatDate(board.updatedAt)}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Footer Actions */}
-          <div className="flex items-center gap-2 pt-3 border-t border-[#E8E8E8] dark:border-neutral-800">
+          {/* Action buttons */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            paddingTop: 16,
+            borderTop: '1px solid var(--border-color)',
+            flexShrink: 0,
+          }}>
+            {/* Edit */}
             <button
               onClick={() => setShowEdit(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[#E8E8E8] dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:bg-neutral-900 transition-all"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '7px 13px',
+                borderRadius: 9,
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-surface)',
+                color: 'var(--text-secondary)',
+                fontSize: 12, fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--bg-surface-3)';
+                e.currentTarget.style.borderColor = 'var(--border-strong)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'var(--bg-surface)';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
             >
               <Pencil size={11} /> Edit
             </button>
+
+            {/* Delete */}
             <button
               onClick={() => setShowDelete(true)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-transparent text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '7px 13px',
+                borderRadius: 9,
+                border: '1px solid rgba(220,38,38,0.25)',
+                background: 'transparent',
+                color: 'var(--red)',
+                fontSize: 12, fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--red)';
+                e.currentTarget.style.color = '#FFFFFF';
+                e.currentTarget.style.borderColor = 'var(--red)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--red)';
+                e.currentTarget.style.borderColor = 'rgba(220,38,38,0.25)';
+              }}
             >
               <Trash2 size={11} /> Delete
             </button>
+
+            {/* Open — push right */}
             <Link
               to={`/boards/${board._id}`}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-all ml-auto"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '7px 14px',
+                borderRadius: 9,
+                background: 'var(--color-primary)',
+                color: '#FFFFFF',
+                fontSize: 12, fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                marginLeft: 'auto',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.opacity = '0.85';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.transform = 'none';
+              }}
             >
               Open <ArrowRight size={11} />
             </Link>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Edit Modal */}
       {showEdit && (
@@ -151,14 +258,14 @@ const BoardCard = ({ board, onUpdate, onDelete }) => {
         />
       )}
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirm */}
       {showDelete && (
         <ConfirmDialog
           isOpen={showDelete}
           onClose={() => setShowDelete(false)}
           onConfirm={handleDelete}
           title="Delete Board?"
-          message={`Are you sure you want to delete "${board.title}"? All tasks inside this board will be permanently deleted.`}
+          message={`Are you sure you want to delete "${board.title}"? All tasks inside will be permanently deleted.`}
           confirmLabel="Delete Board"
           loading={deleting}
         />

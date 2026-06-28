@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Sun, Moon, LogOut, ChevronDown, Bell, Search, X } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, ChevronDown, Bell, Search, X, Plus } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,29 +11,18 @@ const Navbar = ({ onMenuClick }) => {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [bellHover, setBellHover] = useState(false);
+  const [themeHover, setThemeHover] = useState(false);
   const dropdownRef = useRef(null);
+  const searchRef = useRef(null);
+
+  const isDashboard = location.pathname === '/dashboard';
 
   const initials = user?.name
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U';
 
-  // Get active board title from localStorage (saved in BoardPage.jsx)
-  const [boardTitle, setBoardTitle] = useState('');
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const savedTitle = localStorage.getItem('taskflow_current_board_title');
-      if (savedTitle) setBoardTitle(savedTitle);
-    };
-    
-    // Check initially
-    handleStorageChange();
-
-    // Check periodically or on path change
-    const interval = setInterval(handleStorageChange, 1000);
-    return () => clearInterval(interval);
-  }, [location.pathname]);
-
-  // Close dropdown on outside click
+  /* Close dropdown on outside click */
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -44,140 +33,312 @@ const Navbar = ({ onMenuClick }) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  /* ⌘K focus search */
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
   const handleLogout = () => {
     setProfileOpen(false);
     logout();
     navigate('/login');
   };
 
-  // Determine breadcrumbs
-  const getBreadcrumbs = () => {
-    const paths = [{ label: 'Dashboard', to: '/dashboard' }];
-    if (location.pathname.startsWith('/boards/')) {
-      paths.push({ 
-        label: boardTitle || 'Board View', 
-        to: location.pathname 
-      });
-    }
-    return paths;
+  /* Dispatch custom event → DashboardPage listens */
+  const handleNewBoard = () => {
+    window.dispatchEvent(new CustomEvent('taskflow:new-board'));
   };
+
+  /* Shared icon button style */
+  const iconBtnStyle = (hovered) => ({
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: hovered ? 'var(--bg-surface-3)' : 'transparent',
+    border: 'none',
+    color: hovered ? 'var(--text-primary)' : 'var(--text-secondary)',
+    cursor: 'pointer',
+    transition: 'background 0.15s ease, color 0.15s ease',
+    flexShrink: 0,
+  });
 
   return (
     <header
-      className="sticky top-0 z-20 flex items-center justify-between px-4 sm:px-6 h-14 bg-white border-b border-[#E8E8E8] dark:bg-[#121212] dark:border-[#222224] transition-colors"
+      style={{
+        height: 60,
+        display: 'flex',
+        alignItems: 'center',
+        paddingLeft: 20,
+        paddingRight: 20,
+        gap: 12,
+        background: 'var(--bg-navbar)',
+        borderBottom: '1px solid var(--border-color)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 20,
+        flexShrink: 0,
+        transition: 'background 0.25s ease, border-color 0.25s ease',
+      }}
     >
-      {/* Left: Menu & Breadcrumbs */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuClick}
-          className="btn btn-ghost btn-icon lg:hidden p-1.5 rounded-lg text-secondary hover:bg-neutral-100 dark:hover:bg-neutral-800"
-          aria-label="Open menu"
+      {/* ── Left: Hamburger (mobile) ────────────────────────── */}
+      <button
+        onClick={onMenuClick}
+        className="lg:hidden"
+        aria-label="Open sidebar"
+        style={{
+          width: 36, height: 36,
+          borderRadius: 9,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'transparent',
+          border: 'none',
+          color: 'var(--text-secondary)',
+          cursor: 'pointer',
+          flexShrink: 0,
+        }}
+      >
+        <Menu size={18} strokeWidth={2} />
+      </button>
+
+      {/* ── Center: Search ──────────────────────────────────── */}
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 8px' }}>
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: 440,
+          }}
         >
-          <Menu size={18} />
-        </button>
-
-        {/* Breadcrumb Navigation */}
-        <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-neutral-400">
-          {getBreadcrumbs().map((path, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              {idx > 0 && <span className="text-neutral-300">/</span>}
-              <span
-                onClick={() => navigate(path.to)}
-                className={`cursor-pointer hover:text-black dark:hover:text-white transition-colors ${
-                  idx === getBreadcrumbs().length - 1 ? 'text-black dark:text-white font-semibold' : ''
-                }`}
-              >
-                {path.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Middle: Search input matching Apple/Linear design */}
-      <div className="flex-1 max-w-md mx-6 hidden md:block">
-        <div className="relative w-full">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-neutral-400">
-            <Search size={14} />
+          <span style={{
+            position: 'absolute',
+            left: 14,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)',
+            display: 'flex',
+            pointerEvents: 'none',
+          }}>
+            <Search size={14} strokeWidth={2} />
           </span>
+
           <input
+            ref={searchRef}
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Search tasks, boards..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-12 py-1.5 bg-[#F5F5F5] dark:bg-neutral-900 border border-[#E8E8E8] dark:border-neutral-800 rounded-lg text-xs outline-none focus:border-black dark:focus:border-white transition-colors"
+            style={{
+              width: '100%',
+              paddingLeft: 40,
+              paddingRight: searchQuery ? 40 : 48,
+              paddingTop: 9,
+              paddingBottom: 9,
+              background: 'var(--bg-surface-2)',
+              border: '1.5px solid var(--border-color)',
+              borderRadius: 11,
+              fontSize: 13,
+              fontFamily: 'inherit',
+              color: 'var(--text-primary)',
+              outline: 'none',
+              transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--color-primary)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(0,0,0,0.06)';
+              e.target.style.background = 'var(--bg-surface)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border-color)';
+              e.target.style.boxShadow = 'none';
+              e.target.style.background = 'var(--bg-surface-2)';
+            }}
           />
+
           {searchQuery ? (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-black dark:hover:text-white"
+              style={{
+                position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none',
+                color: 'var(--text-muted)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+              }}
             >
-              <X size={12} />
+              <X size={13} />
             </button>
           ) : (
-            <span className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[10px] text-neutral-400 font-mono">
+            <span style={{
+              position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+              fontSize: 10, color: 'var(--text-faint)',
+              fontFamily: 'monospace', letterSpacing: '0.02em',
+              background: 'var(--bg-surface-3)',
+              padding: '2px 6px', borderRadius: 5,
+              border: '1px solid var(--border-color)',
+              pointerEvents: 'none',
+            }}>
               ⌘K
             </span>
           )}
         </div>
       </div>
 
-      {/* Right: Actions & User Info */}
-      <div className="flex items-center gap-3">
-        {/* Notifications Icon */}
-        <button className="relative p-1.5 rounded-lg text-[#666666] hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-          <Bell size={16} />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-black dark:bg-white rounded-full"></span>
+      {/* ── Right: Actions ──────────────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+
+        {/* Bell */}
+        <button
+          title="Notifications"
+          onMouseEnter={() => setBellHover(true)}
+          onMouseLeave={() => setBellHover(false)}
+          style={{ ...iconBtnStyle(bellHover), position: 'relative' }}
+        >
+          <Bell size={16} strokeWidth={1.75} />
+          <span style={{
+            position: 'absolute', top: 8, right: 8,
+            width: 6, height: 6,
+            borderRadius: '50%',
+            background: 'var(--color-primary)',
+            border: '1.5px solid var(--bg-navbar)',
+          }} />
         </button>
 
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="p-1.5 rounded-lg text-[#666666] hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={isDark ? 'Light mode' : 'Dark mode'}
+          onMouseEnter={() => setThemeHover(true)}
+          onMouseLeave={() => setThemeHover(false)}
+          style={iconBtnStyle(themeHover)}
         >
-          {isDark ? <Sun size={16} /> : <Moon size={16} />}
+          {isDark ? <Sun size={16} strokeWidth={1.75} /> : <Moon size={16} strokeWidth={1.75} />}
         </button>
 
-        {/* Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
+        {/* Divider */}
+        <div style={{
+          width: 1, height: 22,
+          background: 'var(--border-color)',
+          marginLeft: 2, marginRight: 2,
+        }} />
+
+        {/* Profile dropdown */}
+        <div style={{ position: 'relative' }} ref={dropdownRef}>
           <button
             onClick={() => setProfileOpen(v => !v)}
-            className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all duration-150"
             aria-label="User menu"
+            aria-expanded={profileOpen}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '4px 8px 4px 4px',
+              borderRadius: 10,
+              background: 'transparent',
+              border: '1.5px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'var(--bg-surface-3)';
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'transparent';
+            }}
           >
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-black text-white dark:bg-white dark:text-black text-[10px] font-bold shadow-xs">
+            <div style={{
+              width: 28, height: 28, borderRadius: 8,
+              background: 'var(--color-primary)',
+              color: 'var(--bg-surface)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, fontWeight: 800, letterSpacing: '-0.02em',
+            }}>
               {initials}
             </div>
-            <ChevronDown size={12} className={`text-[#666666] transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              size={12}
+              strokeWidth={2.5}
+              style={{
+                color: 'var(--text-muted)',
+                transform: profileOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }}
+            />
           </button>
 
-          {/* Dropdown Card */}
+          {/* Dropdown */}
           {profileOpen && (
             <div
-              className="absolute right-0 top-full mt-2 w-56 rounded-xl overflow-hidden animate-scale-in bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 shadow-xl z-50"
+              className="animate-scale-in"
+              style={{
+                position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                width: 220,
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 14,
+                boxShadow: 'var(--shadow-xl)',
+                overflow: 'hidden',
+                zIndex: 50,
+              }}
             >
-              {/* User details */}
-              <div className="px-4 py-3 border-b border-[#E8E8E8] dark:border-neutral-800">
-                <p className="text-xs font-semibold text-black dark:text-white truncate">{user?.name}</p>
-                <p className="text-[10px] text-neutral-400 truncate mt-0.5">{user?.email}</p>
+              {/* User info */}
+              <div style={{
+                padding: '14px 16px',
+                borderBottom: '1px solid var(--border-color)',
+              }}>
+                <div style={{
+                  fontSize: 13, fontWeight: 600,
+                  color: 'var(--text-primary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {user?.name}
+                </div>
+                <div style={{
+                  fontSize: 11, color: 'var(--text-muted)', marginTop: 3,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {user?.email}
+                </div>
               </div>
 
               {/* Actions */}
-              <div className="p-1 flex flex-col gap-0.5">
+              <div style={{ padding: '6px' }}>
                 <button
-                  onClick={toggleTheme}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-neutral-600 hover:bg-neutral-100 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white transition-all text-left"
+                  onClick={() => { toggleTheme(); setProfileOpen(false); }}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8,
+                    border: 'none', background: 'transparent',
+                    fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer',
+                    textAlign: 'left', transition: 'all 0.12s ease',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-3)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                 >
                   {isDark ? <Sun size={14} /> : <Moon size={14} />}
                   <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
                 </button>
 
-                <div className="my-1 border-t border-[#E8E8E8] dark:border-neutral-800" />
+                <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
 
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all text-left"
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '9px 10px', borderRadius: 8,
+                    border: 'none', background: 'transparent',
+                    fontSize: 13, color: 'var(--red)', cursor: 'pointer',
+                    textAlign: 'left', transition: 'all 0.12s ease',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--red-light)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
                 >
                   <LogOut size={14} />
                   <span>Sign Out</span>
@@ -186,6 +347,47 @@ const Navbar = ({ onMenuClick }) => {
             </div>
           )}
         </div>
+
+        {/* Divider */}
+        <div style={{
+          width: 1, height: 22,
+          background: 'var(--border-color)',
+          marginLeft: 2, marginRight: 2,
+        }} />
+
+        {/* New Board button — only on dashboard */}
+        {isDashboard && (
+          <button
+            onClick={handleNewBoard}
+            id="navbar-new-board"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px',
+              background: 'var(--black)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: 10,
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              whiteSpace: 'nowrap',
+              letterSpacing: '-0.01em',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = '#222222';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'var(--black)';
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <Plus size={14} strokeWidth={2.5} />
+            New Board
+          </button>
+        )}
       </div>
     </header>
   );

@@ -357,7 +357,6 @@ const AIInsightsCard = ({ insights }) => (
     borderRadius: 18,
     padding: '24px 26px',
     boxShadow: 'var(--shadow-sm)',
-    flex: 1,
   }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
       <div style={{
@@ -404,6 +403,45 @@ const AIInsightsCard = ({ insights }) => (
           </div>
         );
       })}
+    </div>
+  </div>
+);
+
+/* ────────────────────────────────────────────────────────────────
+   QUICK STATS CARD
+   ──────────────────────────────────────────────────────────────── */
+const QuickStatsCard = ({ totalBoards, totalTasks, completionRate, completedTasks }) => (
+  <div style={{
+    background: 'var(--bg-surface)',
+    border: '1px solid var(--border-color)',
+    borderRadius: 18,
+    padding: '24px 26px',
+    boxShadow: 'var(--shadow-sm)',
+  }}>
+    <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 20 }}>
+      Quick Stats
+    </div>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: 12
+    }}>
+      <div style={{ background: 'var(--bg-surface-2)', padding: '16px', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalBoards}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Boards</div>
+      </div>
+      <div style={{ background: 'var(--bg-surface-2)', padding: '16px', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{totalTasks}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Tasks</div>
+      </div>
+      <div style={{ background: 'var(--bg-surface-2)', padding: '16px', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{completionRate}%</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Completion</div>
+      </div>
+      <div style={{ background: 'var(--bg-surface-2)', padding: '16px', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+        <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{completedTasks}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6, fontWeight: 500 }}>Completed</div>
+      </div>
     </div>
   </div>
 );
@@ -707,15 +745,14 @@ const DashboardPage = () => {
 
           {/* ─ Tab 1: Boards ──────────────────────────────────────── */}
           {activeTab === 'boards' && (
-            <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ display: 'grid', gap: 32, alignItems: 'start' }} className="grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px]">
               {/* Left: Board Grid */}
-              <div style={{ flex: '1 1 0', minWidth: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 32, minWidth: 0 }}>
                 {loading ? (
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: 20,
-                    marginBottom: 24,
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                    gap: 24,
                   }}>
                     {[1, 2, 3].map(i => <BoardCardSkeleton key={i} />)}
                   </div>
@@ -726,7 +763,6 @@ const DashboardPage = () => {
                     borderRadius: 20,
                     padding: '64px 32px',
                     textAlign: 'center',
-                    marginBottom: 24,
                   }}>
                     <div style={{
                       width: 64, height: 64, borderRadius: 18,
@@ -761,9 +797,8 @@ const DashboardPage = () => {
                 ) : (
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
-                    gap: 20,
-                    marginBottom: 28,
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                    gap: 24,
                   }}>
                     {boards.map((board, i) => (
                       <motion.div
@@ -788,11 +823,9 @@ const DashboardPage = () => {
 
               {/* Right sidebar: Deadlines + AI quick */}
               <div style={{
-                width: 320,
-                flexShrink: 0,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 20,
+                gap: 24,
               }}
                 className="hidden xl:flex"
               >
@@ -800,6 +833,12 @@ const DashboardPage = () => {
                 {boards.length > 0 && (
                   <AIInsightsCard insights={getAIInsights()} />
                 )}
+                <QuickStatsCard 
+                  totalBoards={boards.length} 
+                  totalTasks={totalTasks} 
+                  completionRate={completionRate} 
+                  completedTasks={completedTasks} 
+                />
               </div>
             </div>
           )}

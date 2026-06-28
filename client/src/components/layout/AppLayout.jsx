@@ -4,47 +4,39 @@ import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 
 const AppLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
     <div
       style={{
         display: 'flex',
+        flexDirection: 'column',
         height: '100vh',
         overflow: 'hidden',
         background: 'var(--bg-page)',
       }}
     >
-      {/* Sidebar */}
+      {/* Navbar — full width, always on top */}
+      <Navbar onMenuClick={() => setDrawerOpen(v => !v)} />
+
+      {/* Navigation Drawer — pure overlay, no space taken */}
       <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
       />
 
-      {/* Main area */}
-      <div
+      {/* Main content — full width, no sidebar offset */}
+      <main
         style={{
           flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          minWidth: 0,
-          overflow: 'hidden',
         }}
       >
-        {/* Navbar */}
-        <Navbar onMenuClick={() => setSidebarOpen(v => !v)} />
-
-        {/* Page */}
-        <main
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            overflowX: 'hidden',
-          }}
-        >
-          <Outlet />
-        </main>
-      </div>
+        <Outlet />
+      </main>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Sun, Moon, LogOut, ChevronDown, Bell, Search, X, Plus } from 'lucide-react';
+import { Menu, Sun, Moon, LogOut, ChevronDown, Bell, Search, X, Plus, CheckSquare } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -78,44 +78,100 @@ const Navbar = ({ onMenuClick }) => {
         height: 60,
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingLeft: 20,
         paddingRight: 20,
-        gap: 12,
         background: 'var(--bg-navbar)',
         borderBottom: '1px solid var(--border-color)',
         position: 'sticky',
         top: 0,
-        zIndex: 20,
+        zIndex: 100,
         flexShrink: 0,
         transition: 'background 0.25s ease, border-color 0.25s ease',
       }}
     >
-      {/* ── Left: Hamburger (mobile) ────────────────────────── */}
-      <button
-        onClick={onMenuClick}
-        className="lg:hidden"
-        aria-label="Open sidebar"
+      {/* ── Left: Logo + Hamburger ────────────────────────── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32,
+            borderRadius: 8,
+            background: 'var(--text-primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <CheckSquare size={16} style={{ color: 'var(--bg-navbar)' }} strokeWidth={2.5} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{
+              color: 'var(--text-primary)',
+              fontSize: 15,
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+            }}>
+              TaskFlow
+            </div>
+            <div style={{
+              color: 'var(--text-muted)',
+              fontSize: 10,
+              marginTop: 3,
+              letterSpacing: '0.015em',
+              fontWeight: 500,
+            }}>
+              Smart Task Manager
+            </div>
+          </div>
+        </div>
+
+        {/* Hamburger */}
+        <button
+          onClick={onMenuClick}
+          aria-label="Toggle navigation"
+          title="Navigation"
+          style={{
+            width: 36, height: 36,
+            borderRadius: 9,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            flexShrink: 0,
+            transition: 'background 0.15s ease, color 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--bg-surface-3)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }}
+        >
+          <Menu size={18} strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* ── Center: Search (Perfectly Centered) ──────────────── */}
+      <div
         style={{
-          width: 36, height: 36,
-          borderRadius: 9,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'transparent',
-          border: 'none',
-          color: 'var(--text-secondary)',
-          cursor: 'pointer',
-          flexShrink: 0,
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '100%',
+          maxWidth: 440,
+          display: 'flex',
+          justifyContent: 'center',
+          pointerEvents: 'none', // Allows clicking through the container
         }}
       >
-        <Menu size={18} strokeWidth={2} />
-      </button>
-
-      {/* ── Center: Search ──────────────────────────────────── */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', padding: '0 8px' }}>
         <div
           style={{
             position: 'relative',
             width: '100%',
-            maxWidth: 440,
+            pointerEvents: 'auto', // Re-enable pointer events for the input
           }}
         >
           <span style={{
@@ -193,7 +249,6 @@ const Navbar = ({ onMenuClick }) => {
 
       {/* ── Right: Actions ──────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-
         {/* Bell */}
         <button
           title="Notifications"

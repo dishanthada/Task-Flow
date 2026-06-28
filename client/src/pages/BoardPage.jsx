@@ -3,25 +3,37 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Plus, ChevronRight, Search, SlidersHorizontal,
-  ArrowUpDown, Home, X
+  ArrowUpDown, Home, X, Kanban, Clock, CheckSquare,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { getBoardById } from '../api/boardsApi';
 import useTasks from '../hooks/useTasks';
 import TaskColumn from '../components/tasks/TaskColumn';
 import TaskForm from '../components/tasks/TaskForm';
 import Spinner from '../components/common/Spinner';
-import { TaskCardSkeleton } from '../components/common/SkeletonCard';
 import Button from '../components/common/Button';
 import { getErrorMessage } from '../utils/dateUtils';
+
+/* ─── Shared select style helper ──────────────────────────────── */
+const filterSelectStyle = {
+  fontSize: 12,
+  fontWeight: 500,
+  background: 'transparent',
+  border: 'none',
+  outline: 'none',
+  cursor: 'pointer',
+  color: 'var(--text-secondary)',
+  fontFamily: 'inherit',
+};
 
 const BoardPage = () => {
   const { boardId } = useParams();
   const navigate = useNavigate();
 
-  const [board, setBoard]             = useState(null);
+  const [board, setBoard]               = useState(null);
   const [boardLoading, setBoardLoading] = useState(true);
   const [showCreateTask, setShowCreateTask] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery]   = useState('');
   const [createStatus, setCreateStatus] = useState('todo');
 
   const {
@@ -35,6 +47,7 @@ const BoardPage = () => {
     updateFilters,
   } = useTasks(boardId);
 
+  /* ── Fetch board metadata ─────────────────────────────────── */
   useEffect(() => {
     const fetchBoard = async () => {
       setBoardLoading(true);
@@ -51,13 +64,11 @@ const BoardPage = () => {
       }
     };
     fetchBoard();
-
-    return () => {
-      localStorage.removeItem('taskflow_current_board_title');
-    };
+    return () => localStorage.removeItem('taskflow_current_board_title');
   }, [boardId, navigate]);
 
-  const filteredTasks = tasks.filter((task) => {
+  /* ── Filter + split tasks ────────────────────────────────── */
+  const filteredTasks = tasks.filter(task => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
@@ -77,145 +88,348 @@ const BoardPage = () => {
 
   const hasActiveFilters = filters.priority || searchQuery;
 
+  /* ── Loading state ───────────────────────────────────────── */
   if (boardLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] animate-pulse">
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        minHeight: '60vh', gap: 14,
+      }}>
         <Spinner size="lg" />
-        <p className="text-xs mt-3 text-neutral-400">Loading board details...</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          Loading board…
+        </p>
       </div>
     );
   }
 
   if (!board) return null;
 
+  /* ── Last updated display ─────────────────────────────────── */
+  const lastUpdated = board.updatedAt
+    ? new Date(board.updatedAt).toLocaleDateString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+      })
+    : null;
+
+  /* ── RENDER ──────────────────────────────────────────────── */
   return (
-    <div className="flex flex-col h-full animate-fade-in">
-      {/* Board Header Banner */}
-      <div
-        className="px-6 sm:px-8 py-5 border-b border-[#E8E8E8] bg-white dark:bg-[#121212] dark:border-neutral-800"
-      >
-        {/* Navigation Breadcrumb */}
-        <nav className="flex items-center gap-1.5 text-xs text-neutral-400 mb-3.5">
-          <Link to="/dashboard" className="flex items-center gap-1 hover:text-black dark:hover:text-white transition-colors">
-            <Home size={11} /> Dashboard
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+        background: 'var(--bg-page)',
+      }}
+    >
+      {/* ══════════════════════════════════════════════════════
+          BOARD HEADER
+         ══════════════════════════════════════════════════════ */}
+      <div style={{
+        padding: '20px 32px 22px',
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border-color)',
+        flexShrink: 0,
+      }}>
+        {/* Breadcrumb */}
+        <nav style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          fontSize: 12, color: 'var(--text-muted)',
+          marginBottom: 16,
+        }}>
+          <Link
+            to="/dashboard"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              color: 'var(--text-muted)', textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+          >
+            <Home size={12} strokeWidth={2} /> Dashboard
           </Link>
-          <ChevronRight size={10} />
-          <span className="font-semibold text-black dark:text-white truncate max-w-[200px]">
+          <ChevronRight size={11} style={{ color: 'var(--text-faint)' }} />
+          <span style={{
+            color: 'var(--text-primary)', fontWeight: 600,
+            maxWidth: 260, overflow: 'hidden',
+            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
             {board.title}
           </span>
         </nav>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-black dark:text-white">
-              {board.title}
-            </h1>
-            {board.description && (
-              <p className="text-xs text-neutral-500 mt-1">
-                {board.description}
-              </p>
-            )}
+        {/* Header row */}
+        <div style={{
+          display: 'flex', alignItems: 'flex-start',
+          justifyContent: 'space-between', gap: 20,
+          flexWrap: 'wrap',
+        }}>
+          {/* Left: title + meta */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
+              <div style={{
+                width: 40, height: 40, borderRadius: 10,
+                background: 'var(--bg-surface-3)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--text-secondary)', flexShrink: 0,
+              }}>
+                <Kanban size={18} strokeWidth={1.75} />
+              </div>
+              <div>
+                <h1 style={{
+                  fontSize: 26,
+                  fontWeight: 800,
+                  color: 'var(--text-primary)',
+                  letterSpacing: '-0.035em',
+                  lineHeight: 1.15,
+                  margin: 0,
+                }}>
+                  {board.title}
+                </h1>
+                {board.description && (
+                  <p style={{
+                    fontSize: 13, color: 'var(--text-muted)',
+                    marginTop: 3, lineHeight: 1.5,
+                  }}>
+                    {board.description}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Meta chips */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 10 }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                fontSize: 12, color: 'var(--text-muted)',
+              }}>
+                <CheckSquare size={12} strokeWidth={2} />
+                <span>
+                  <b style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
+                    {tasks.length}
+                  </b> {tasks.length === 1 ? 'task' : 'tasks'}
+                </span>
+              </div>
+
+              {lastUpdated && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  fontSize: 12, color: 'var(--text-muted)',
+                }}>
+                  <Clock size={12} strokeWidth={2} />
+                  <span>Updated {lastUpdated}</span>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* Right: Add Task button */}
           <Button
             onClick={() => handleCreateForColumn('todo')}
             icon={<Plus size={14} strokeWidth={2.5} />}
-            className="btn-primary py-2 text-xs rounded-lg self-start sm:self-auto flex-shrink-0"
           >
             Add Task
           </Button>
         </div>
       </div>
 
-      {/* Filter Toolbar */}
-      <div
-        className="px-6 sm:px-8 py-3 border-b border-[#E8E8E8] bg-[#FAFAFA] dark:bg-neutral-900/40 dark:border-neutral-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5"
-      >
-        {/* Search Input field */}
-        <div className="relative flex-1 max-w-xs">
-          <Search
-            size={13}
-            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400"
-          />
+      {/* ══════════════════════════════════════════════════════
+          TOOLBAR
+         ══════════════════════════════════════════════════════ */}
+      <div style={{
+        padding: '12px 32px',
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border-color)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        flexWrap: 'wrap',
+        flexShrink: 0,
+      }}>
+        {/* Search */}
+        <div style={{ position: 'relative', minWidth: 220, maxWidth: 300, flex: '1 1 220px' }}>
+          <Search size={13} style={{
+            position: 'absolute', left: 12, top: '50%',
+            transform: 'translateY(-50%)',
+            color: 'var(--text-muted)', pointerEvents: 'none',
+          }} />
           <input
             type="text"
-            placeholder="Search tasks..."
+            placeholder="Search tasks…"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="form-input pl-8.5 pr-8 py-1.75 text-xs bg-white dark:bg-[#121212]"
+            style={{
+              width: '100%',
+              paddingLeft: 34, paddingRight: searchQuery ? 34 : 12,
+              paddingTop: 8, paddingBottom: 8,
+              background: 'var(--bg-surface-2)',
+              border: '1.5px solid var(--border-color)',
+              borderRadius: 9,
+              fontSize: 13, fontFamily: 'inherit',
+              color: 'var(--text-primary)',
+              outline: 'none',
+              transition: 'border-color 0.15s ease',
+            }}
+            onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={e => e.target.style.borderColor = 'var(--border-color)'}
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-neutral-400 hover:text-black dark:hover:text-white"
+              style={{
+                position: 'absolute', right: 10, top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none', border: 'none',
+                color: 'var(--text-muted)', cursor: 'pointer',
+                display: 'flex', alignItems: 'center',
+                padding: 2, borderRadius: 4,
+              }}
             >
               <X size={12} />
             </button>
           )}
         </div>
 
-        {/* Toolbar selectors */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Priority Filter */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800">
-            <SlidersHorizontal size={11} className="text-neutral-400" />
-            <select
-              value={filters.priority}
-              onChange={e => updateFilters({ priority: e.target.value })}
-              className="text-[11px] font-semibold bg-transparent border-none outline-none cursor-pointer text-neutral-600 dark:text-neutral-300"
-            >
-              <option value="">All Priorities</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
+        {/* Separator */}
+        <div style={{ width: 1, height: 24, background: 'var(--border-color)', flexShrink: 0 }} />
 
-          {/* Sort Filter */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800">
-            <ArrowUpDown size={11} className="text-neutral-400" />
-            <select
-              value={filters.sortBy}
-              onChange={e => updateFilters({ sortBy: e.target.value })}
-              className="text-[11px] font-semibold bg-transparent border-none outline-none cursor-pointer text-neutral-600 dark:text-neutral-300"
-            >
-              <option value="order">Default Order</option>
-              <option value="dueDate">Due Date</option>
-              <option value="priority">Priority</option>
-              <option value="createdAt">Created Date</option>
-            </select>
-          </div>
-
-          {/* Clear Button */}
-          {hasActiveFilters && (
-            <button
-              onClick={() => { updateFilters({ priority: '' }); setSearchQuery(''); }}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 transition-all border border-transparent"
-            >
-              <X size={11} /> Clear Filters
-            </button>
-          )}
+        {/* Priority filter */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          padding: '7px 12px',
+          background: 'var(--bg-surface)',
+          border: '1.5px solid var(--border-color)',
+          borderRadius: 9, cursor: 'pointer',
+          transition: 'border-color 0.15s ease',
+        }}>
+          <SlidersHorizontal size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <select
+            value={filters.priority}
+            onChange={e => updateFilters({ priority: e.target.value })}
+            style={filterSelectStyle}
+          >
+            <option value="">All Priorities</option>
+            <option value="high">High Priority</option>
+            <option value="medium">Medium Priority</option>
+            <option value="low">Low Priority</option>
+          </select>
         </div>
 
-        {/* Count summary */}
-        <div className="flex items-center gap-2 ml-auto text-[11px] text-neutral-400 font-medium">
-          <span>{filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}</span>
+        {/* Sort */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 7,
+          padding: '7px 12px',
+          background: 'var(--bg-surface)',
+          border: '1.5px solid var(--border-color)',
+          borderRadius: 9,
+        }}>
+          <ArrowUpDown size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <select
+            value={filters.sortBy}
+            onChange={e => updateFilters({ sortBy: e.target.value })}
+            style={filterSelectStyle}
+          >
+            <option value="order">Default Order</option>
+            <option value="dueDate">Due Date</option>
+            <option value="priority">Priority</option>
+            <option value="createdAt">Created Date</option>
+          </select>
+        </div>
+
+        {/* Clear filters */}
+        {hasActiveFilters && (
+          <button
+            onClick={() => { updateFilters({ priority: '' }); setSearchQuery(''); }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '7px 12px',
+              background: 'var(--bg-surface-3)',
+              border: '1.5px solid var(--border-color)',
+              borderRadius: 9,
+              fontSize: 12, fontWeight: 500,
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
+          >
+            <X size={11} /> Clear
+          </button>
+        )}
+
+        {/* Task count — right aligned */}
+        <div style={{
+          marginLeft: 'auto',
+          fontSize: 12, color: 'var(--text-muted)',
+          fontWeight: 500, flexShrink: 0,
+        }}>
+          {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
         </div>
       </div>
 
-      {/* Kanban Board columns wrapper */}
-      <div className="flex-1 overflow-auto p-6 sm:p-8 bg-[#F5F5F5] dark:bg-[#0A0A0A]">
+      {/* ══════════════════════════════════════════════════════
+          KANBAN BOARD
+         ══════════════════════════════════════════════════════ */}
+      <div style={{
+        flex: 1,
+        overflowX: 'auto',
+        overflowY: 'auto',
+        padding: '28px 32px',
+        background: 'var(--bg-page)',
+      }}>
         {tasksLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          /* Skeleton */
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(300px, 1fr))',
+            gap: 20,
+          }}>
             {[0, 1, 2].map(i => (
-              <div key={i} className="flex flex-col gap-3">
-                <TaskCardSkeleton />
-                <TaskCardSkeleton />
+              <div key={i} style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 18,
+                padding: 20,
+                display: 'flex', flexDirection: 'column', gap: 14,
+                minHeight: 400,
+              }}>
+                {/* column header skeleton */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div className="skeleton" style={{ width: 10, height: 10, borderRadius: '50%' }} />
+                  <div className="skeleton" style={{ height: 16, width: 100, borderRadius: 6 }} />
+                  <div className="skeleton" style={{ height: 20, width: 28, borderRadius: 6, marginLeft: 8 }} />
+                </div>
+                {/* card skeletons */}
+                {[0, 1].map(j => (
+                  <div key={j} style={{
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 14, padding: 18,
+                    display: 'flex', flexDirection: 'column', gap: 10,
+                  }}>
+                    <div className="skeleton" style={{ height: 12, width: 60, borderRadius: 5 }} />
+                    <div className="skeleton" style={{ height: 16, width: '80%', borderRadius: 6 }} />
+                    <div className="skeleton" style={{ height: 12, width: '95%', borderRadius: 5 }} />
+                    <div className="skeleton" style={{ height: 12, width: '60%', borderRadius: 5 }} />
+                  </div>
+                ))}
               </div>
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start min-h-full">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, minmax(300px, 1fr))',
+            gap: 20,
+            alignItems: 'start',
+            minHeight: '100%',
+          }}>
             <TaskColumn
               status="todo"
               tasks={todoTasks}
@@ -244,7 +458,9 @@ const BoardPage = () => {
         )}
       </div>
 
-      {/* Create Task Modal */}
+      {/* ══════════════════════════════════════════════════════
+          CREATE TASK MODAL
+         ══════════════════════════════════════════════════════ */}
       {showCreateTask && (
         <TaskForm
           isOpen={showCreateTask}
@@ -257,7 +473,7 @@ const BoardPage = () => {
           defaultStatus={createStatus}
         />
       )}
-    </div>
+    </motion.div>
   );
 };
 

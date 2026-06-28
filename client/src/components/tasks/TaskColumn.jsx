@@ -1,27 +1,33 @@
 import { Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import TaskCard from './TaskCard';
 
+/* ─── Column configuration ─────────────────────────────────────── */
 const COLUMN_CONFIG = {
   'todo': {
-    label: 'To Do',
-    dotClass: 'dot-todo bg-black dark:bg-white',
+    label:    'To Do',
+    dotColor: '#111111',
     emptyIcon: '📋',
-    emptyMsg: 'No tasks to do. Add one to get started!',
+    emptyTitle: 'No tasks to do',
+    emptyMsg: 'Add a task to get started on this board.',
   },
   'in-progress': {
-    label: 'In Progress',
-    dotClass: 'dot-progress bg-neutral-500',
+    label:    'In Progress',
+    dotColor: '#D97706',
     emptyIcon: '⚡',
-    emptyMsg: 'No tasks in progress. Pick a task to start working!',
+    emptyTitle: 'Nothing in progress',
+    emptyMsg: 'Pick a task from To Do and start working on it.',
   },
   'done': {
-    label: 'Done',
-    dotClass: 'dot-done bg-black dark:bg-white',
+    label:    'Done',
+    dotColor: '#16A34A',
     emptyIcon: '🏆',
-    emptyMsg: 'No completed tasks yet. Great things take time!',
+    emptyTitle: 'No completed tasks',
+    emptyMsg: 'Complete tasks will appear here. Keep going!',
   },
 };
 
+/* ─── TaskColumn ───────────────────────────────────────────────── */
 const TaskColumn = ({
   status,
   tasks,
@@ -31,81 +37,209 @@ const TaskColumn = ({
   onCreateTaskClick,
 }) => {
   const config = COLUMN_CONFIG[status] || COLUMN_CONFIG['todo'];
-  const count = tasks.length;
+  const count  = tasks.length;
 
   return (
-    <div
-      className="flex flex-col bg-white border border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 rounded-xl overflow-hidden shadow-xs min-h-[480px]"
-    >
-      {/* Column Header */}
-      <div
-        className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#E8E8E8] dark:bg-[#121212] dark:border-neutral-800 flex-shrink-0"
-      >
-        <div className="flex items-center gap-2">
-          {/* Header indicator dot */}
-          <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${config.dotClass}`} />
-          <span className="text-xs font-bold text-black dark:text-white">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      background: 'var(--bg-surface)',
+      border: '1px solid var(--border-color)',
+      borderRadius: 18,
+      boxShadow: 'var(--shadow-sm)',
+      overflow: 'hidden',
+      minHeight: 520,
+    }}>
+
+      {/* ── Column Header ─────────────────────────────────── */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '18px 20px 14px',
+        background: 'var(--bg-surface)',
+        borderBottom: '1px solid var(--border-color)',
+        flexShrink: 0,
+      }}>
+        {/* Left: dot + title + count */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{
+            width: 9, height: 9,
+            borderRadius: '50%',
+            background: config.dotColor,
+            flexShrink: 0,
+            display: 'inline-block',
+          }} />
+          <span style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.02em',
+          }}>
             {config.label}
           </span>
-          <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-[10px] font-bold text-neutral-500">
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 22, height: 22,
+            padding: '0 6px',
+            borderRadius: 7,
+            background: 'var(--bg-surface-3)',
+            fontSize: 11, fontWeight: 700,
+            color: 'var(--text-secondary)',
+          }}>
             {count}
           </span>
         </div>
 
-        {/* Add task button on header */}
+        {/* Right: + button */}
         <button
           onClick={onCreateTaskClick}
-          className="p-1 rounded text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-all"
           title={`Add task to ${config.label}`}
+          style={{
+            width: 28, height: 28,
+            borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = 'var(--bg-surface-3)';
+            e.currentTarget.style.color = 'var(--text-primary)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = 'var(--text-muted)';
+          }}
         >
-          <Plus size={14} strokeWidth={2.5} />
+          <Plus size={15} strokeWidth={2.5} />
         </button>
       </div>
 
-      {/* Task list */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 max-h-[calc(100vh-280px)]">
+      {/* ── Task List ─────────────────────────────────────── */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '14px 14px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        maxHeight: 'calc(100vh - 340px)',
+        minHeight: 280,
+      }}>
         {count === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4 text-center select-none flex-1">
-            <div className="w-12 h-12 rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-[#E8E8E8] dark:border-neutral-800 flex items-center justify-center text-xl mb-4">
+          /* Empty State */
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flex: 1,
+            padding: '40px 20px',
+            textAlign: 'center',
+            minHeight: 260,
+            userSelect: 'none',
+          }}>
+            <div style={{
+              width: 56, height: 56,
+              borderRadius: 16,
+              background: 'var(--bg-surface-3)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 26, marginBottom: 16,
+            }}>
               {config.emptyIcon}
             </div>
-            <p className="text-xs font-semibold text-black dark:text-white">
-              No tasks in {config.label.toLowerCase()}
-            </p>
-            <p className="text-[11px] text-neutral-400 mt-1 max-w-[150px] leading-normal">
+            <div style={{
+              fontSize: 14, fontWeight: 700,
+              color: 'var(--text-primary)',
+              marginBottom: 6, letterSpacing: '-0.01em',
+            }}>
+              {config.emptyTitle}
+            </div>
+            <p style={{
+              fontSize: 12, color: 'var(--text-muted)',
+              lineHeight: 1.55, maxWidth: 180, marginBottom: 20,
+            }}>
               {config.emptyMsg}
             </p>
             <button
               onClick={onCreateTaskClick}
-              className="mt-4 flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-lg bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-all shadow-xs"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px',
+                background: 'var(--color-primary)',
+                color: '#FFFFFF',
+                border: 'none', borderRadius: 9,
+                fontSize: 12, fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                letterSpacing: '-0.01em',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'none'; }}
             >
-              <Plus size={11} strokeWidth={2.5} /> Add Task
+              <Plus size={12} strokeWidth={2.5} /> Add Task
             </button>
           </div>
         ) : (
-          tasks.map((task, idx) => (
-            <div
-              key={task._id}
-              className="animate-card-in"
-              style={{ animationDelay: `${idx * 30}ms` }}
-            >
-              <TaskCard
-                task={task}
-                onUpdate={onUpdateTask}
-                onDelete={onDeleteTask}
-                onMove={onMoveTask}
-              />
-            </div>
-          ))
+          <AnimatePresence initial={false}>
+            {tasks.map((task, idx) => (
+              <motion.div
+                key={task._id}
+                layout
+                initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{
+                  duration: 0.22,
+                  delay: idx * 0.04,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                <TaskCard
+                  task={task}
+                  onUpdate={onUpdateTask}
+                  onDelete={onDeleteTask}
+                  onMove={onMoveTask}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 
-      {/* Footer shortcut add task button */}
+      {/* ── Footer Add Button ─────────────────────────────── */}
       {count > 0 && (
-        <div className="px-3 pb-3 flex-shrink-0">
+        <div style={{ padding: '8px 14px 14px', flexShrink: 0 }}>
           <button
             onClick={onCreateTaskClick}
-            className="w-full flex items-center justify-center gap-1 py-2 rounded-lg text-xs font-semibold border border-dashed border-[#E8E8E8] dark:border-neutral-800 text-neutral-400 hover:text-black hover:border-black dark:hover:text-white dark:hover:border-white hover:bg-neutral-50 dark:hover:bg-neutral-900/50 transition-all"
+            style={{
+              width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              gap: 6,
+              padding: '9px',
+              background: 'transparent',
+              border: '1.5px dashed var(--border-color)',
+              borderRadius: 10,
+              fontSize: 12, fontWeight: 500,
+              color: 'var(--text-muted)',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--border-strong)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.background = 'var(--bg-surface-2)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border-color)';
+              e.currentTarget.style.color = 'var(--text-muted)';
+              e.currentTarget.style.background = 'transparent';
+            }}
           >
             <Plus size={13} strokeWidth={2.5} /> Add Task
           </button>

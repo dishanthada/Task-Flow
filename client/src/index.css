@@ -510,3 +510,60 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   STATS SCROLL CONTAINER (mobile)
+   ═══════════════════════════════════════════════════════════════ */
+.stats-scroll-container::-webkit-scrollbar { display: none; }
+.stats-scroll-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ANALYTICS GRID — responsive two-column
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .analytics-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD PAGE RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (min-width: 640px) {
+  .dashboard-page {
+    padding: 32px 32px 48px !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAVBAR RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Hide search on very small screens */
+@media (max-width: 540px) {
+  .navbar-search {
+    display: none !important;
+  }
+  .navbar-logo-text {
+    display: none !important;
+  }
+}
+
+/* Show search from medium screens, hide "New Board" text label on small */
+@media (max-width: 440px) {
+  .navbar-new-board-text {
+    display: none;
+  }
+  .navbar-divider {
+    display: none;
+  }
+}
+
+/* Full navbar on desktop */
+@media (min-width: 541px) {
+  .navbar-search {
+    display: flex !important;
+  }
+}

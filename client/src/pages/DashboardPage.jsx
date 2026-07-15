@@ -55,13 +55,14 @@ const StatCard = ({ label, value, sub, Icon, delay = 0 }) => (
       background: 'var(--bg-surface)',
       border: '1px solid var(--border-color)',
       borderRadius: 18,
-      padding: '24px 26px',
+      padding: '20px 20px',
       display: 'flex',
       flexDirection: 'column',
       gap: 14,
       boxShadow: 'var(--shadow-sm)',
-      flex: 1,
-      minWidth: 0,
+      flex: '0 0 auto',
+      width: 'clamp(140px, 40vw, 180px)',
+      scrollSnapAlign: 'start',
       cursor: 'default',
       transition: 'box-shadow 0.25s ease, transform 0.25s ease, border-color 0.2s ease',
     }}
@@ -79,7 +80,7 @@ const StatCard = ({ label, value, sub, Icon, delay = 0 }) => (
           {label}
         </div>
         <div style={{
-          fontSize: 36,
+          fontSize: 30,
           fontWeight: 800,
           color: 'var(--text-primary)',
           lineHeight: 1,
@@ -96,12 +97,12 @@ const StatCard = ({ label, value, sub, Icon, delay = 0 }) => (
         )}
       </div>
       <div style={{
-        width: 44, height: 44, borderRadius: 12,
+        width: 36, height: 36, borderRadius: 10,
         background: 'var(--bg-surface-3)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--text-secondary)', flexShrink: 0,
       }}>
-        <Icon size={18} strokeWidth={1.75} />
+        <Icon size={16} strokeWidth={1.75} />
       </div>
     </div>
   </motion.div>
@@ -458,13 +459,14 @@ const ProductivityCard = ({ rate, delay = 0 }) => (
       background: 'var(--bg-surface)',
       border: '1px solid var(--border-color)',
       borderRadius: 18,
-      padding: '24px 26px',
+      padding: '20px 20px',
       display: 'flex',
       flexDirection: 'column',
       gap: 14,
       boxShadow: 'var(--shadow-sm)',
-      flex: 1,
-      minWidth: 0,
+      flex: '0 0 auto',
+      width: 'clamp(140px, 40vw, 180px)',
+      scrollSnapAlign: 'start',
     }}
     whileHover={{ y: -4, boxShadow: '0 12px 32px rgba(0,0,0,0.09)' }}
   >
@@ -480,7 +482,7 @@ const ProductivityCard = ({ rate, delay = 0 }) => (
           Productivity
         </div>
         <div style={{
-          fontSize: 36, fontWeight: 800,
+          fontSize: 30, fontWeight: 800,
           color: 'var(--text-primary)',
           lineHeight: 1, letterSpacing: '-0.04em',
         }}>
@@ -646,8 +648,8 @@ const DashboardPage = () => {
   /* ── RENDER ──────────────────────────────────────────────────── */
   return (
     <div
-      className="animate-fade-in"
-      style={{ padding: '36px 36px 48px', minHeight: '100%' }}
+      className="animate-fade-in dashboard-page"
+      style={{ padding: '24px 16px 48px', minHeight: '100%' }}
     >
       {/* ══ Hero Section ══════════════════════════════════════════ */}
       <div style={{ marginBottom: 36 }}>
@@ -660,8 +662,8 @@ const DashboardPage = () => {
         }}>
           👋 Welcome back
         </div>
-        <h1 style={{
-          fontSize: 'var(--fs-hero)',
+        <h1 className="dashboard-hero-title" style={{
+          fontSize: 'clamp(24px, 5vw, var(--fs-hero))',
           fontWeight: 800,
           color: 'var(--text-primary)',
           letterSpacing: '-0.04em',
@@ -682,11 +684,14 @@ const DashboardPage = () => {
       </div>
 
       {/* ══ Stats Grid ═════════════════════════════════════════════ */}
-      <div style={{
+      <div className="stats-scroll-container" style={{
         display: 'flex',
-        gap: 16,
-        marginBottom: 36,
-        flexWrap: 'wrap',
+        gap: 12,
+        marginBottom: 28,
+        overflowX: 'auto',
+        paddingBottom: 4,
+        scrollSnapType: 'x mandatory',
+        WebkitOverflowScrolling: 'touch',
       }}>
         <StatCard label="Total Tasks"   value={totalTasks}      sub="across all boards"      Icon={Layers}       delay={0}    />
         <StatCard label="In Progress"   value={inProgressTasks} sub="actively being worked"  Icon={Clock}        delay={0.06} />
@@ -699,8 +704,11 @@ const DashboardPage = () => {
       <div style={{
         display: 'flex',
         borderBottom: '1px solid var(--border-color)',
-        gap: 2,
-        marginBottom: 32,
+        gap: 0,
+        marginBottom: 24,
+        overflowX: 'auto',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
       }}>
         {TABS.map(tab => {
           const active = activeTab === tab.id;
@@ -709,8 +717,8 @@ const DashboardPage = () => {
               key={tab.id}
               onClick={() => setSearchParams({ tab: tab.id })}
               style={{
-                display: 'flex', alignItems: 'center', gap: 8,
-                padding: '10px 18px',
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '10px 14px',
                 border: 'none',
                 borderBottom: active
                   ? '2px solid var(--color-primary)'
@@ -724,6 +732,7 @@ const DashboardPage = () => {
                 transition: 'color 0.15s ease, border-color 0.15s ease',
                 letterSpacing: '-0.01em',
                 whiteSpace: 'nowrap',
+                flexShrink: 0,
               }}
             >
               <tab.Icon size={14} strokeWidth={active ? 2.5 : 2} />
@@ -845,8 +854,7 @@ const DashboardPage = () => {
 
           {/* ─ Tab 2: Analytics ───────────────────────────────────── */}
           {activeTab === 'analytics' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}
-              className="grid-cols-1 xl:grid-cols-[1fr_340px]"
+            <div className="analytics-grid" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}
             >
               {/* Left: Charts */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>

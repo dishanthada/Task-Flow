@@ -79,59 +79,27 @@ const Navbar = ({ onMenuClick }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingLeft: 20,
-        paddingRight: 20,
+        paddingLeft: 16,
+        paddingRight: 16,
         background: 'var(--bg-navbar)',
         borderBottom: '1px solid var(--border-color)',
         position: 'sticky',
         top: 0,
         zIndex: 100,
         flexShrink: 0,
+        overflow: 'hidden',
         transition: 'background 0.25s ease, border-color 0.25s ease',
       }}
     >
       {/* ── Left: Logo + Hamburger ────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
-        {/* Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32,
-            borderRadius: 8,
-            background: 'var(--text-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <CheckSquare size={16} style={{ color: 'var(--bg-navbar)' }} strokeWidth={2.5} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{
-              color: 'var(--text-primary)',
-              fontSize: 15,
-              fontWeight: 700,
-              lineHeight: 1,
-              letterSpacing: '-0.03em',
-            }}>
-              TaskFlow
-            </div>
-            <div style={{
-              color: 'var(--text-muted)',
-              fontSize: 10,
-              marginTop: 3,
-              letterSpacing: '0.015em',
-              fontWeight: 500,
-            }}>
-              Smart Task Manager
-            </div>
-          </div>
-        </div>
-
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         {/* Hamburger */}
         <button
           onClick={onMenuClick}
           aria-label="Toggle navigation"
           title="Navigation"
           style={{
-            width: 36, height: 36,
+            width: 34, height: 34,
             borderRadius: 9,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'transparent',
@@ -152,26 +120,60 @@ const Navbar = ({ onMenuClick }) => {
         >
           <Menu size={18} strokeWidth={2} />
         </button>
+
+        {/* Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{
+            width: 30, height: 30,
+            borderRadius: 8,
+            background: 'var(--text-primary)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <CheckSquare size={15} style={{ color: 'var(--bg-navbar)' }} strokeWidth={2.5} />
+          </div>
+          <div className="navbar-logo-text" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{
+              color: 'var(--text-primary)',
+              fontSize: 14,
+              fontWeight: 700,
+              lineHeight: 1,
+              letterSpacing: '-0.03em',
+            }}>
+              TaskFlow
+            </div>
+            <div style={{
+              color: 'var(--text-muted)',
+              fontSize: 9,
+              marginTop: 2,
+              letterSpacing: '0.015em',
+              fontWeight: 500,
+            }}>
+              Smart Task Manager
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Center: Search (Perfectly Centered) ──────────────── */}
+      {/* ── Center: Search (hidden on mobile, visible on md+) ──────────────── */}
       <div
+        className="navbar-search"
         style={{
           position: 'absolute',
           left: '50%',
           transform: 'translateX(-50%)',
           width: '100%',
-          maxWidth: 440,
+          maxWidth: 400,
           display: 'flex',
           justifyContent: 'center',
-          pointerEvents: 'none', // Allows clicking through the container
+          pointerEvents: 'none',
         }}
       >
         <div
           style={{
             position: 'relative',
             width: '100%',
-            pointerEvents: 'auto', // Re-enable pointer events for the input
+            pointerEvents: 'auto',
           }}
         >
           <span style={{
@@ -248,7 +250,7 @@ const Navbar = ({ onMenuClick }) => {
       </div>
 
       {/* ── Right: Actions ──────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
         {/* Bell */}
         <button
           title="Notifications"
@@ -278,7 +280,7 @@ const Navbar = ({ onMenuClick }) => {
         </button>
 
         {/* Divider */}
-        <div style={{
+        <div className="navbar-divider" style={{
           width: 1, height: 22,
           background: 'var(--border-color)',
           marginLeft: 2, marginRight: 2,
@@ -417,7 +419,7 @@ const Navbar = ({ onMenuClick }) => {
             id="navbar-new-board"
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              padding: '7px 14px',
+              padding: '7px 12px',
               background: 'var(--black)',
               color: '#FFFFFF',
               border: 'none',
@@ -440,7 +442,7 @@ const Navbar = ({ onMenuClick }) => {
             }}
           >
             <Plus size={14} strokeWidth={2.5} />
-            New Board
+            <span className="navbar-new-board-text">New Board</span>
           </button>
         )}
       </div>

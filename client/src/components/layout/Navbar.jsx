@@ -87,7 +87,6 @@ const Navbar = ({ onMenuClick }) => {
         top: 0,
         zIndex: 100,
         flexShrink: 0,
-        overflow: 'hidden',
         transition: 'background 0.25s ease, border-color 0.25s ease',
       }}
     >
@@ -342,7 +341,7 @@ const Navbar = ({ onMenuClick }) => {
                 borderRadius: 14,
                 boxShadow: 'var(--shadow-xl)',
                 overflow: 'hidden',
-                zIndex: 50,
+                zIndex: 500,
               }}
             >
               {/* User info */}

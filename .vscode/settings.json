@@ -1,0 +1,16 @@
+{
+  "editor.bracketPairColorization.enabled": true,
+  "workbench.editor.enablePreview": false,
+  "editor.linkedEditing": true,
+
+  "simpleBrowser.focusLockIndicator.enabled": false,
+
+  "terminal.integrated.commandsToSkipShell": [],
+
+  "workbench.externalBrowser": "",
+
+  "liveServer.settings.donotVerifyTags": true,
+  "liveServer.settings.donotShowInfoMsg": true,
+
+  "terminal.integrated.env.windows": {}
+}

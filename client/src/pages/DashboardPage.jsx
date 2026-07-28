@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import Modal from '../components/common/Modal';
 import {
   Plus, LayoutGrid, Calendar as CalendarIcon,
   BarChart2, Users, Sparkles, AlertCircle,
@@ -534,6 +536,13 @@ const DashboardPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+
+  /* Invite Member modal state */
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState('Collaborator');
+  const [inviteEmailError, setInviteEmailError] = useState('');
+  const [inviteSending, setInviteSending] = useState(false);
 
   const activeTab = searchParams.get('tab') || 'boards';
   const firstName = user?.name?.split(' ')[0] || 'there';
@@ -1179,6 +1188,12 @@ const DashboardPage = () => {
                   </p>
                 </div>
                 <button
+                  onClick={() => {
+                    setInviteEmail('');
+                    setInviteRole('Collaborator');
+                    setInviteEmailError('');
+                    setShowInvite(true);
+                  }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 7,
                     padding: '9px 16px',
@@ -1434,6 +1449,166 @@ const DashboardPage = () => {
           title="Create New Board"
         />
       )}
+
+      {/* ══ Invite Member Modal ═════════════════════════════════════ */}
+      <Modal
+        isOpen={showInvite}
+        onClose={() => setShowInvite(false)}
+        title="Invite Member"
+        size="sm"
+        footer={
+          <>
+            <button
+              onClick={() => setShowInvite(false)}
+              style={{
+                padding: '9px 18px', borderRadius: 10,
+                border: '1.5px solid var(--border-color)',
+                background: 'transparent',
+                fontSize: 13, fontWeight: 600,
+                color: 'var(--text-secondary)',
+                cursor: 'pointer', transition: 'all 0.15s ease',
+                fontFamily: 'inherit',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-surface-2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              Cancel
+            </button>
+            <button
+              disabled={inviteSending}
+              onClick={async () => {
+                /* Validate email */
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!inviteEmail.trim()) {
+                  setInviteEmailError('Email address is required.');
+                  return;
+                }
+                if (!emailRegex.test(inviteEmail.trim())) {
+                  setInviteEmailError('Please enter a valid email address.');
+                  return;
+                }
+                setInviteEmailError('');
+                setInviteSending(true);
+
+                /* Simulate sending invite (no real API endpoint for invites) */
+                await new Promise(r => setTimeout(r, 600));
+
+                setInviteSending(false);
+                setShowInvite(false);
+                toast.success(`Invite sent to ${inviteEmail.trim()} as ${inviteRole}`);
+              }}
+              style={{
+                padding: '9px 20px', borderRadius: 10,
+                border: 'none',
+                background: inviteSending ? 'var(--bg-surface-3)' : 'var(--color-primary)',
+                fontSize: 13, fontWeight: 600,
+                color: inviteSending ? 'var(--text-muted)' : 'var(--bg-surface)',
+                cursor: inviteSending ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
+                display: 'flex', alignItems: 'center', gap: 7,
+                fontFamily: 'inherit',
+              }}
+            >
+              {inviteSending ? (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ animation: 'spin 0.8s linear infinite' }}>
+                    <path d="M21 12a9 9 0 11-6.219-8.56" strokeLinecap="round" />
+                  </svg>
+                  Sending…
+                </>
+              ) : (
+                <><UserPlus size={13} /> Send Invite</>
+              )}
+            </button>
+          </>
+        }
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Email field */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Email Address <span style={{ color: 'var(--red)' }}>*</span>
+            </label>
+            <input
+              type="email"
+              autoFocus
+              placeholder="colleague@company.com"
+              value={inviteEmail}
+              onChange={e => { setInviteEmail(e.target.value); setInviteEmailError(''); }}
+              onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.closest('[role="dialog"]')?.querySelector('button[data-send]')?.click(); }}
+              style={{
+                width: '100%', padding: '11px 14px',
+                background: 'var(--bg-surface-2)',
+                border: `1.5px solid ${inviteEmailError ? 'var(--red)' : 'var(--border-color)'}`,
+                borderRadius: 10, fontSize: 13,
+                color: 'var(--text-primary)',
+                outline: 'none',
+                fontFamily: 'inherit',
+                transition: 'border-color 0.2s ease',
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => { if (!inviteEmailError) e.target.style.borderColor = 'var(--color-primary)'; }}
+              onBlur={e => { if (!inviteEmailError) e.target.style.borderColor = 'var(--border-color)'; }}
+            />
+            {inviteEmailError && (
+              <p style={{ fontSize: 12, color: 'var(--red)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {inviteEmailError}
+              </p>
+            )}
+          </div>
+
+          {/* Role field */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Role
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { value: 'Collaborator', desc: 'Can create, edit, and comment on tasks' },
+                { value: 'Viewer',       desc: 'Can view boards and tasks, no editing' },
+                { value: 'Admin',        desc: 'Full access including settings and members' },
+              ].map(({ value, desc }) => (
+                <button
+                  key={value}
+                  onClick={() => setInviteRole(value)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: `1.5px solid ${inviteRole === value ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                    background: inviteRole === value ? 'rgba(0,0,0,0.03)' : 'var(--bg-surface-2)',
+                    cursor: 'pointer', textAlign: 'left',
+                    transition: 'all 0.15s ease',
+                    width: '100%',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {/* Radio indicator */}
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    border: `2px solid ${inviteRole === value ? 'var(--color-primary)' : 'var(--border-color)'}`,
+                    background: inviteRole === value ? 'var(--color-primary)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, transition: 'all 0.15s ease',
+                  }}>
+                    {inviteRole === value && (
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff' }} />
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>{value}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3 }}>{desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

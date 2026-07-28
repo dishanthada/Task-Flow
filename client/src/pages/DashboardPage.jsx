@@ -5,7 +5,7 @@ import {
   BarChart2, Users, Sparkles, AlertCircle,
   Clock, UserPlus, CheckCircle, Layers,
   TrendingUp, Kanban, Activity, ChevronLeft, ChevronRight,
-  ArrowUpRight, Folder
+  ArrowUpRight, Folder, Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useBoards from '../hooks/useBoards';
@@ -14,6 +14,7 @@ import BoardForm from '../components/boards/BoardForm';
 import { BoardCardSkeleton } from '../components/common/SkeletonCard';
 import Button from '../components/common/Button';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { getTasks } from '../api/tasksApi';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
@@ -527,10 +528,12 @@ const ProductivityCard = ({ rate, delay = 0 }) => (
    ════════════════════════════════════════════════════════════════ */
 const DashboardPage = () => {
   const { user } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const { boards, loading, createBoard, updateBoard, deleteBoard } = useBoards();
   const [showCreate, setShowCreate] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const activeTab = searchParams.get('tab') || 'boards';
   const firstName = user?.name?.split(' ')[0] || 'there';
@@ -540,6 +543,13 @@ const DashboardPage = () => {
     const handler = () => setShowCreate(true);
     window.addEventListener('taskflow:new-board', handler);
     return () => window.removeEventListener('taskflow:new-board', handler);
+  }, []);
+
+  /* Listen for Navbar search */
+  useEffect(() => {
+    const handler = (e) => setSearchQuery(e.detail?.query || '');
+    window.addEventListener('taskflow:search', handler);
+    return () => window.removeEventListener('taskflow:search', handler);
   }, []);
 
   /* Task fetching */
@@ -643,7 +653,16 @@ const DashboardPage = () => {
     { id: 'analytics', label: 'Analytics',   Icon: BarChart2   },
     { id: 'calendar',  label: 'Calendar',    Icon: CalendarIcon },
     { id: 'team',      label: 'Members',     Icon: Users        },
+    { id: 'settings',  label: 'Settings',    Icon: Settings    },
   ];
+
+  /* Filtered boards for search */
+  const filteredBoards = searchQuery.trim()
+    ? boards.filter(b =>
+        b.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : boards;
 
   /* ── RENDER ──────────────────────────────────────────────────── */
   return (
@@ -765,7 +784,7 @@ const DashboardPage = () => {
                   }}>
                     {[1, 2, 3].map(i => <BoardCardSkeleton key={i} />)}
                   </div>
-                ) : boards.length === 0 ? (
+                ) : filteredBoards.length === 0 ? (
                   <div style={{
                     background: 'var(--bg-surface)',
                     border: '1.5px dashed var(--border-color)',
@@ -780,28 +799,32 @@ const DashboardPage = () => {
                       margin: '0 auto 20px',
                       fontSize: 28,
                     }}>
-                      📋
+                      {searchQuery ? '🔍' : '📋'}
                     </div>
                     <h3 style={{
                       fontSize: 18, fontWeight: 700,
                       color: 'var(--text-primary)',
                       marginBottom: 8, letterSpacing: '-0.02em',
                     }}>
-                      No boards yet
+                      {searchQuery ? `No results for "${searchQuery}"` : 'No boards yet'}
                     </h3>
                     <p style={{
                       fontSize: 14, color: 'var(--text-muted)',
                       marginBottom: 24, lineHeight: 1.6,
                       maxWidth: 320, margin: '0 auto 24px',
                     }}>
-                      Create your first board to start organizing tasks, tracking progress, and collaborating.
+                      {searchQuery
+                        ? 'Try a different search term or clear the search bar.'
+                        : 'Create your first board to start organizing tasks, tracking progress, and collaborating.'}
                     </p>
-                    <Button
-                      onClick={() => setShowCreate(true)}
-                      icon={<Plus size={14} strokeWidth={2.5} />}
-                    >
-                      Create Your First Board
-                    </Button>
+                    {!searchQuery && (
+                      <Button
+                        onClick={() => setShowCreate(true)}
+                        icon={<Plus size={14} strokeWidth={2.5} />}
+                      >
+                        Create Your First Board
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div style={{
@@ -809,7 +832,7 @@ const DashboardPage = () => {
                     gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
                     gap: 24,
                   }}>
-                    {boards.map((board, i) => (
+                    {filteredBoards.map((board, i) => (
                       <motion.div
                         key={board._id}
                         initial={{ opacity: 0, y: 16 }}
@@ -1235,6 +1258,163 @@ const DashboardPage = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ─ Tab 5: Settings ────────────────────────────────── */}
+          {activeTab === 'settings' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {/* Profile Settings */}
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 20,
+                padding: '28px 28px',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  Profile
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>Manage your personal information</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {[{ label: 'Full Name', value: user?.name || '' }, { label: 'Email Address', value: user?.email || '' }].map(({ label, value }) => (
+                    <div key={label}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 7, letterSpacing: '0.02em' }}>{label}</div>
+                      <div style={{
+                        width: '100%', padding: '10px 14px',
+                        background: 'var(--bg-surface-2)',
+                        border: '1.5px solid var(--border-color)',
+                        borderRadius: 10, fontSize: 13,
+                        color: 'var(--text-primary)',
+                        maxWidth: 480,
+                        boxSizing: 'border-box',
+                      }}>{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Appearance Settings */}
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 20,
+                padding: '28px 28px',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  Appearance
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>Customize the look and feel of your workspace</div>
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '14px 16px',
+                  background: 'var(--bg-surface-2)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 12, maxWidth: 480,
+                }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Dark Mode</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>Switch between light and dark themes</div>
+                  </div>
+                  <button
+                    onClick={toggleTheme}
+                    style={{
+                      width: 44, height: 24, borderRadius: 12,
+                      background: isDark ? 'var(--color-primary)' : 'var(--bg-surface-3)',
+                      border: '1px solid var(--border-color)',
+                      cursor: 'pointer',
+                      position: 'relative', transition: 'background 0.25s ease',
+                      flexShrink: 0,
+                    }}
+                    title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  >
+                    <span style={{
+                      position: 'absolute', top: 3,
+                      left: isDark ? 23 : 3,
+                      width: 16, height: 16,
+                      borderRadius: '50%', background: isDark ? '#fff' : 'var(--text-muted)',
+                      transition: 'left 0.25s ease',
+                      display: 'block',
+                    }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Notifications Settings */}
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 20,
+                padding: '28px 28px',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  Notifications
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>Choose what notifications you receive</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 480 }}>
+                  {[
+                    { label: 'Task assignments', desc: 'When a task is assigned to you' },
+                    { label: 'Board updates',    desc: 'When a board you follow is updated' },
+                    { label: 'Deadline reminders', desc: '24h before a task is due' },
+                  ].map(({ label, desc }, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '14px 16px',
+                      background: 'var(--bg-surface-2)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: 12,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>{desc}</div>
+                      </div>
+                      <div style={{
+                        width: 44, height: 24, borderRadius: 12,
+                        background: 'var(--color-primary)',
+                        position: 'relative', flexShrink: 0,
+                        cursor: 'default',
+                      }}>
+                        <span style={{
+                          position: 'absolute', top: 3, left: 23,
+                          width: 18, height: 18, borderRadius: '50%', background: '#fff',
+                          display: 'block',
+                        }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Danger Zone */}
+              <div style={{
+                background: 'var(--bg-surface)',
+                border: '1px solid rgba(220,38,38,0.2)',
+                borderRadius: 20,
+                padding: '28px 28px',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#DC2626', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  Danger Zone
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>Irreversible actions for your account</div>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 18px',
+                    background: 'rgba(220,38,38,0.06)',
+                    border: '1px solid rgba(220,38,38,0.2)',
+                    borderRadius: 10, fontSize: 13, fontWeight: 600,
+                    color: '#DC2626', cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.12)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.06)'; }}
+                >
+                  Delete Account
+                </button>
               </div>
             </div>
           )}

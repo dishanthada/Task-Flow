@@ -12,8 +12,10 @@ const Navbar = ({ onMenuClick }) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [bellHover, setBellHover] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [themeHover, setThemeHover] = useState(false);
   const dropdownRef = useRef(null);
+  const bellRef = useRef(null);
   const searchRef = useRef(null);
 
   const isDashboard = location.pathname === '/dashboard';
@@ -22,11 +24,14 @@ const Navbar = ({ onMenuClick }) => {
     ? user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
     : 'U';
 
-  /* Close dropdown on outside click */
+  /* Close dropdowns on outside click */
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (bellRef.current && !bellRef.current.contains(e.target)) {
+        setBellOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -192,7 +197,11 @@ const Navbar = ({ onMenuClick }) => {
             type="text"
             placeholder="Search tasks, boards..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              const q = e.target.value;
+              setSearchQuery(q);
+              window.dispatchEvent(new CustomEvent('taskflow:search', { detail: { query: q } }));
+            }}
             style={{
               width: '100%',
               paddingLeft: 40,
@@ -222,7 +231,10 @@ const Navbar = ({ onMenuClick }) => {
 
           {searchQuery ? (
             <button
-              onClick={() => setSearchQuery('')}
+              onClick={() => {
+                setSearchQuery('');
+                window.dispatchEvent(new CustomEvent('taskflow:search', { detail: { query: '' } }));
+              }}
               style={{
                 position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                 background: 'none', border: 'none',
@@ -251,21 +263,109 @@ const Navbar = ({ onMenuClick }) => {
       {/* ── Right: Actions ──────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
         {/* Bell */}
-        <button
-          title="Notifications"
-          onMouseEnter={() => setBellHover(true)}
-          onMouseLeave={() => setBellHover(false)}
-          style={{ ...iconBtnStyle(bellHover), position: 'relative' }}
-        >
-          <Bell size={16} strokeWidth={1.75} />
-          <span style={{
-            position: 'absolute', top: 8, right: 8,
-            width: 6, height: 6,
-            borderRadius: '50%',
-            background: 'var(--color-primary)',
-            border: '1.5px solid var(--bg-navbar)',
-          }} />
-        </button>
+        <div style={{ position: 'relative' }} ref={bellRef}>
+          <button
+            title="Notifications"
+            onClick={() => setBellOpen(v => !v)}
+            onMouseEnter={() => setBellHover(true)}
+            onMouseLeave={() => setBellHover(false)}
+            style={{ ...iconBtnStyle(bellHover || bellOpen), position: 'relative' }}
+          >
+            <Bell size={16} strokeWidth={1.75} />
+            <span style={{
+              position: 'absolute', top: 8, right: 8,
+              width: 6, height: 6,
+              borderRadius: '50%',
+              background: 'var(--color-primary)',
+              border: '1.5px solid var(--bg-navbar)',
+            }} />
+          </button>
+
+          {/* Notifications Dropdown */}
+          {bellOpen && (
+            <div
+              className="animate-scale-in"
+              style={{
+                position: 'absolute', right: 0, top: 'calc(100% + 8px)',
+                width: 300,
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 14,
+                boxShadow: 'var(--shadow-xl)',
+                overflow: 'hidden',
+                zIndex: 500,
+              }}
+            >
+              {/* Header */}
+              <div style={{
+                padding: '14px 16px',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Notifications</div>
+                <span style={{
+                  fontSize: 10, fontWeight: 700,
+                  padding: '2px 7px', borderRadius: 6,
+                  background: 'var(--color-primary)', color: '#fff',
+                }}>3 new</span>
+              </div>
+
+              {/* Notification items */}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {[
+                  { icon: '✅', title: 'Task completed', desc: 'Design Review was marked done', time: '2m ago' },
+                  { icon: '🔔', title: 'Board updated',  desc: 'Sprint Backlog was modified',    time: '1h ago' },
+                  { icon: '⚠️', title: 'Deadline soon',  desc: 'API Integration due tomorrow',   time: '3h ago' },
+                ].map((n, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 12,
+                      padding: '12px 16px',
+                      borderBottom: i < 2 ? '1px solid var(--border-color)' : 'none',
+                      cursor: 'pointer',
+                      transition: 'background 0.15s ease',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-surface-2)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                      background: 'var(--bg-surface-3)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14,
+                    }}>{n.icon}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{n.title}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.4 }}>{n.desc}</div>
+                    </div>
+                    <div style={{ fontSize: 10, color: 'var(--text-faint)', flexShrink: 0 }}>{n.time}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer */}
+              <div style={{
+                padding: '10px 16px',
+                borderTop: '1px solid var(--border-color)',
+                textAlign: 'center',
+              }}>
+                <button
+                  onClick={() => setBellOpen(false)}
+                  style={{
+                    fontSize: 12, color: 'var(--text-muted)', background: 'none',
+                    border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                    transition: 'color 0.15s ease',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                >
+                  Mark all as read
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Theme toggle */}
         <button

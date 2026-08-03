@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { register, login, getMe, updateTheme, googleLogin } = require('../controllers/auth.controller');
+const { register, login, getMe, updateTheme, googleLogin, updateProfile } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 
@@ -36,11 +36,24 @@ const themeValidation = [
     .isIn(['light', 'dark']).withMessage('Theme must be light or dark'),
 ];
 
+const profileValidation = [
+  body('name')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 }).withMessage('Name must be between 2 and 50 characters'),
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Please provide a valid email')
+    .normalizeEmail(),
+];
+
 // Routes
 router.post('/register', registerValidation, validate, register);
 router.post('/login', loginValidation, validate, login);
 router.post('/google', googleLogin);
 router.get('/me', protect, getMe);
 router.put('/theme', protect, themeValidation, validate, updateTheme);
+router.put('/profile', protect, profileValidation, validate, updateProfile);
 
 module.exports = router;

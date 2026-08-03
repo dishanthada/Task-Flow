@@ -230,4 +230,79 @@ const googleLogin = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, getMe, updateTheme, googleLogin };
+/**
+ * @desc    Update user profile (name and/or email)
+ * @route   PUT /api/auth/profile
+ * @access  Private
+ */
+const updateProfile = async (req, res, next) => {
+  try {
+    const { name, email } = req.body;
+
+    const updateFields = {};
+
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      if (trimmedName.length < 2 || trimmedName.length > 50) {
+        return res.status(400).json({
+          success: false,
+          message: 'Name must be between 2 and 50 characters',
+        });
+      }
+      updateFields.name = trimmedName;
+    }
+
+    if (email !== undefined) {
+      const trimmedEmail = email.toLowerCase().trim();
+      const emailRegex = /^\S+@\S+\.\S+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide a valid email address',
+        });
+      }
+      // Check if the new email is already in use by another user
+      if (trimmedEmail !== req.user.email) {
+        const existing = await User.findOne({ email: trimmedEmail });
+        if (existing) {
+          return res.status(400).json({
+            success: false,
+            message: 'An account with this email already exists',
+          });
+        }
+      }
+      updateFields.email = trimmedEmail;
+    }
+
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No fields provided to update',
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updateFields,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          theme: user.theme,
+          createdAt: user.createdAt,
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, getMe, updateTheme, googleLogin, updateProfile };

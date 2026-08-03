@@ -24,6 +24,8 @@ const filterSelectStyle = {
   cursor: 'pointer',
   color: 'var(--text-secondary)',
   fontFamily: 'inherit',
+  accentColor: 'var(--color-primary)',
+  colorScheme: 'light dark',
 };
 
 const BoardPage = () => {

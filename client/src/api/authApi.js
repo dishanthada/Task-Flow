@@ -20,6 +20,11 @@ export const updateTheme = async (theme) => {
   return res.data;
 };
 
+export const updateProfile = async (data) => {
+  const res = await axiosInstance.put('/auth/profile', data);
+  return res.data;
+};
+
 export const googleLogin = async (data) => {
   const res = await axiosInstance.post('/auth/google', data);
   return res.data;

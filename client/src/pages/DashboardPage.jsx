@@ -18,6 +18,7 @@ import Button from '../components/common/Button';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getTasks } from '../api/tasksApi';
+import { updateProfile } from '../api/authApi';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis,
   Tooltip, CartesianGrid, PieChart, Pie, Cell
@@ -529,7 +530,7 @@ const ProductivityCard = ({ rate, delay = 0 }) => (
    DASHBOARD PAGE
    ════════════════════════════════════════════════════════════════ */
 const DashboardPage = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { boards, loading, createBoard, updateBoard, deleteBoard } = useBoards();
   const [showCreate, setShowCreate] = useState(false);
@@ -546,6 +547,40 @@ const DashboardPage = () => {
 
   const activeTab = searchParams.get('tab') || 'boards';
   const firstName = user?.name?.split(' ')[0] || 'there';
+
+  /* Profile settings state */
+  const [profileForm, setProfileForm]     = useState({ name: user?.name || '', email: user?.email || '' });
+  const [profileErrors, setProfileErrors] = useState({});
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  // Keep form in sync if user changes (e.g. after page reload)
+  useEffect(() => {
+    if (user) setProfileForm({ name: user.name || '', email: user.email || '' });
+  }, [user?._id]);
+
+  const handleProfileSave = async () => {
+    const errors = {};
+    const trimmedName  = profileForm.name.trim();
+    const trimmedEmail = profileForm.email.trim();
+    if (!trimmedName)                          errors.name  = 'Name is required';
+    else if (trimmedName.length < 2)           errors.name  = 'Name must be at least 2 characters';
+    else if (trimmedName.length > 50)          errors.name  = 'Name cannot exceed 50 characters';
+    if (!trimmedEmail)                         errors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) errors.email = 'Please provide a valid email';
+    if (Object.keys(errors).length > 0) { setProfileErrors(errors); return; }
+    setProfileErrors({});
+    setProfileSaving(true);
+    try {
+      const res = await updateProfile({ name: trimmedName, email: trimmedEmail });
+      updateUser(res.data.user);
+      toast.success('Profile updated successfully');
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Failed to update profile';
+      toast.error(msg);
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   /* Listen for Navbar "New Board" button */
   useEffect(() => {
@@ -1292,21 +1327,61 @@ const DashboardPage = () => {
                   Profile
                 </div>
                 <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 24 }}>Manage your personal information</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {[{ label: 'Full Name', value: user?.name || '' }, { label: 'Email Address', value: user?.email || '' }].map(({ label, value }) => (
-                    <div key={label}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {[
+                    { label: 'Full Name',      key: 'name',  type: 'text',  placeholder: 'Your full name' },
+                    { label: 'Email Address',  key: 'email', type: 'email', placeholder: 'your@email.com' },
+                  ].map(({ label, key, type, placeholder }) => (
+                    <div key={key}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 7, letterSpacing: '0.02em' }}>{label}</div>
-                      <div style={{
-                        width: '100%', padding: '10px 14px',
-                        background: 'var(--bg-surface-2)',
-                        border: '1.5px solid var(--border-color)',
-                        borderRadius: 10, fontSize: 13,
-                        color: 'var(--text-primary)',
-                        maxWidth: 480,
-                        boxSizing: 'border-box',
-                      }}>{value}</div>
+                      <input
+                        type={type}
+                        value={profileForm[key]}
+                        placeholder={placeholder}
+                        onChange={e => {
+                          setProfileForm(prev => ({ ...prev, [key]: e.target.value }));
+                          if (profileErrors[key]) setProfileErrors(prev => ({ ...prev, [key]: '' }));
+                        }}
+                        style={{
+                          width: '100%', padding: '10px 14px',
+                          background: 'var(--bg-surface-2)',
+                          border: `1.5px solid ${profileErrors[key] ? 'var(--red)' : 'var(--border-color)'}`,
+                          borderRadius: 10, fontSize: 13,
+                          color: 'var(--text-primary)',
+                          fontFamily: 'inherit',
+                          maxWidth: 480,
+                          boxSizing: 'border-box',
+                          outline: 'none',
+                          transition: 'border-color 0.2s ease',
+                        }}
+                        onFocus={e => { e.target.style.borderColor = 'var(--color-primary)'; }}
+                        onBlur={e  => { e.target.style.borderColor = profileErrors[key] ? 'var(--red)' : 'var(--border-color)'; }}
+                      />
+                      {profileErrors[key] && (
+                        <div style={{ fontSize: 11, color: 'var(--red)', marginTop: 5 }}>{profileErrors[key]}</div>
+                      )}
                     </div>
                   ))}
+                  <div style={{ maxWidth: 480 }}>
+                    <button
+                      onClick={handleProfileSave}
+                      disabled={profileSaving}
+                      style={{
+                        marginTop: 6,
+                        padding: '10px 22px',
+                        background: profileSaving ? 'var(--bg-surface-3)' : 'var(--color-primary)',
+                        color: profileSaving ? 'var(--text-muted)' : 'var(--bg-surface)',
+                        border: 'none', borderRadius: 10,
+                        fontSize: 13, fontWeight: 600,
+                        fontFamily: 'inherit',
+                        cursor: profileSaving ? 'not-allowed' : 'pointer',
+                        transition: 'background 0.2s ease, opacity 0.2s ease',
+                        opacity: profileSaving ? 0.7 : 1,
+                      }}
+                    >
+                      {profileSaving ? 'Saving…' : 'Save Changes'}
+                    </button>
+                  </div>
                 </div>
               </div>
 

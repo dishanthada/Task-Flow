@@ -337,6 +337,12 @@ body {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   outline: none;
   line-height: 1.5;
+  accent-color: var(--color-primary);
+  color-scheme: light;
+}
+.dark .form-input {
+  color-scheme: dark;
+  accent-color: var(--color-primary);
 }
 .form-input:hover:not(:focus) { border-color: var(--border-strong); }
 .form-input:focus {

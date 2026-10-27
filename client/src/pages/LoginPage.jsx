@@ -83,21 +83,34 @@ const LoginPage = () => {
   };
 
   const handleGoogleAuth = useGoogleLogin({
-    flow: 'auth-code',
-    onSuccess: async (codeResponse) => {
+    onSuccess: async (tokenResponse) => {
       setLoading(true);
       try {
-        const res = await googleLogin({ code: codeResponse.code });
+        const res = await googleLogin({
+          accessToken: tokenResponse.access_token,
+          code: tokenResponse.code,
+        });
         loginUser(res.data);
         toast.success(`Welcome back, ${res.data.user.name}! 👋`);
         navigate('/dashboard');
       } catch (err) {
+        console.error('Google Auth backend error:', err);
         toast.error(getErrorMessage(err) || 'Google Auth failed');
       } finally {
         setLoading(false);
       }
     },
-    onError: () => toast.error('Google Sign In failed'),
+    onError: (err) => {
+      console.error('Google Sign In Error:', err);
+      if (err?.error === 'popup_closed_by_user') {
+        toast('Google sign in was cancelled', { icon: 'ℹ️' });
+        return;
+      }
+      const msg =
+        err?.error_description ||
+        (err?.error ? `Google Sign In error: ${err.error}` : 'Google Sign In failed');
+      toast.error(msg);
+    },
   });
 
   const inputStyle = (err) => ({

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const User = require('../models/User');
 const { OAuth2Client } = require('google-auth-library');
 
@@ -166,41 +167,115 @@ const updateTheme = async (req, res, next) => {
 };
 
 /**
- * @desc    Google login using Authorization Code Flow
+ * @desc    Google login supporting access_token, authorization code, or ID token (credential)
  * @route   POST /api/auth/google
  * @access  Public
  */
 const googleLogin = async (req, res, next) => {
   try {
-    const { code } = req.body;
+    const { code, credential, idToken, accessToken, access_token } = req.body;
+    const tokenToUse = accessToken || access_token;
+    const jwtCredential = credential || idToken;
 
-    if (!code) {
+    if (!code && !jwtCredential && !tokenToUse) {
       return res.status(400).json({
         success: false,
-        message: 'Authorization code is required',
+        message: 'Google authorization token or code is required',
       });
     }
 
-    // Exchange authorization code for tokens
-    const { tokens } = await oAuth2Client.getToken(code);
+    let email;
+    let name;
 
-    // Verify the ID token securely
-    const ticket = await oAuth2Client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+    // 1. If client provided Google ID Token / Credential directly
+    if (jwtCredential) {
+      const ticket = await oAuth2Client.verifyIdToken({
+        idToken: jwtCredential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      email = payload.email;
+      name = payload.name;
+    }
+    // 2. If client provided authorization code (auth-code flow)
+    else if (code) {
+      try {
+        const { tokens } = await oAuth2Client.getToken({
+          code,
+          redirect_uri: 'postmessage',
+        });
 
-    const payload = ticket.getPayload();
-    const { email, name } = payload;
+        if (tokens.id_token) {
+          const ticket = await oAuth2Client.verifyIdToken({
+            idToken: tokens.id_token,
+            audience: process.env.GOOGLE_CLIENT_ID,
+          });
+          const payload = ticket.getPayload();
+          email = payload.email;
+          name = payload.name;
+        } else if (tokens.access_token) {
+          const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          email = data.email;
+          name = data.name;
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: 'Failed to retrieve user tokens from Google',
+          });
+        }
+      } catch (tokenErr) {
+        console.error('Google token exchange error:', tokenErr.response?.data || tokenErr.message);
+        return res.status(400).json({
+          success: false,
+          message:
+            tokenErr.response?.data?.error_description ||
+            tokenErr.response?.data?.error ||
+            'Failed to exchange Google authorization code. Please try again.',
+        });
+      }
+    }
+    // 3. If client provided access_token (implicit flow)
+    else if (tokenToUse) {
+      try {
+        const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenToUse}` },
+        });
+        email = data.email;
+        name = data.name;
+      } catch (tokenErr) {
+        console.error('Google access_token verification error:', tokenErr.response?.data || tokenErr.message);
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid or expired Google access token',
+        });
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Could not obtain email address from your Google account',
+      });
+    }
+
+    // Clean and normalize name and email
+    const cleanEmail = email.toLowerCase().trim();
+    let cleanName =
+      name && typeof name === 'string' && name.trim().length >= 2
+        ? name.trim()
+        : cleanEmail.split('@')[0] || 'User';
+    if (cleanName.length > 50) cleanName = cleanName.slice(0, 50);
 
     // Check if user already exists
-    let user = await User.findOne({ email: email.toLowerCase() });
+    let user = await User.findOne({ email: cleanEmail });
 
     if (!user) {
       // Create user with a dummy password since they authenticate via Google
       user = await User.create({
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
+        name: cleanName,
+        email: cleanEmail,
         passwordHash: 'GOOGLE_AUTH_MANAGED_' + Date.now(),
       });
     }
@@ -222,7 +297,7 @@ const googleLogin = async (req, res, next) => {
       },
     });
   } catch (error) {
-    // If the token is invalid or expired
+    console.error('googleLogin unhandled error:', error);
     if (error.message && error.message.includes('Token used too late')) {
       return res.status(401).json({ success: false, message: 'Google token expired' });
     }
